@@ -1,0 +1,22 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kantin Digital Serviam</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#14532d"><link rel="stylesheet" href="css/app.css"><script src="config.js"></script><script src="js/core.js"></script></head>
+<body><header><img id="hdrLogo" class="hide" alt=""><b id="hdrName">Kantin Digital Serviam</b></header>
+<main style="max-width:420px"><div class="card" id="fLogin"><h2>Masuk</h2>
+<label>Nomor induk atau scan kartu</label><input type="text" id="uid" autocomplete="username" autofocus>
+<label>PIN</label><input type="password" id="pin" inputmode="numeric" autocomplete="current-password" style="margin-bottom:12px">
+<button class="btn" id="bLogin">Masuk</button></div>
+<div class="card hide" id="fPin"><h2>Ganti PIN</h2><p class="mu">PIN awal wajib diganti. Gunakan 6 angka.</p>
+<input type="password" id="pn" inputmode="numeric" maxlength="6" placeholder="PIN baru (6 angka)" style="margin-bottom:12px">
+<button class="btn" id="bPin">Simpan PIN</button></div></main><div id="toast"></div>
+<script>
+try{applyTheme(JSON.parse(localStorage.getItem('theme')))}catch(e){}
+const HOME={kasir:'kasir.html',bendahara:'bendahara.html',pencatat:'pencatat.html',kepala:'kepala.html',siswa:'pelanggan.html',guru:'pelanggan.html',wali:'wali.html'};
+let oldPin='';const go=()=>location.href=HOME[sessionStorage.getItem('role')];
+$('#uid').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#pin').focus();}});
+$('#pin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bLogin').click();});
+$('#bLogin').onclick=e=>run(e.target,async()=>{
+  const r=await api('login',{id:$('#uid').value,pin:$('#pin').value});
+  sessionStorage.setItem('tok',r.token);sessionStorage.setItem('role',r.role);sessionStorage.setItem('nama',r.nama);
+  if(r.gantiPin){oldPin=$('#pin').value;$('#fLogin').classList.add('hide');$('#fPin').classList.remove('hide');}else go();});
+$('#bPin').onclick=e=>run(e.target,async()=>{await api('changePin',{pinLama:oldPin,pinBaru:$('#pn').value});toast('PIN diganti');setTimeout(go,600);});
+</script></body></html>

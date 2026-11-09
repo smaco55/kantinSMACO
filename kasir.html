@@ -1,0 +1,22 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kasir</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#14532d"><link rel="stylesheet" href="css/app.css"><script src="config.js"></script><script src="js/core.js"></script></head>
+<body><header><img id="hdrLogo" class="hide" alt=""><b id="hdrName">Kasir</b><button onclick="logout()">Keluar</button></header>
+<nav id="tabs"><button data-t="jual" class="on">Jual</button><button data-t="antre">Antrean</button><button data-t="stok">Habis</button><button data-t="tutup">Tutup</button></nav>
+<main>
+<section id="t-jual"><div class="cols"><div>
+ <input type="text" id="scan" placeholder="Scan kartu di sini…" autocomplete="off" inputmode="none">
+ <div class="row"><button class="btn alt sm" id="bManual">Kartu lupa / manual</button><button class="btn alt sm hide" id="bLast">Batalkan transaksi terakhir</button></div>
+ <div id="manual" class="card hide" style="margin:6px 0"><div class="warn">Input manual dicatat di log. Siswa wajib memasukkan PIN.</div>
+  <input type="search" id="cariM" placeholder="Nama atau nomor induk"><div id="hasilM"></div>
+  <label class="row"><span>Mode darurat (internet bermasalah, input susulan)</span><input type="checkbox" id="susulan"></label></div>
+ <input type="search" id="cari" placeholder="Cari barang…" style="margin-top:6px"><div class="grid" id="grid"></div></div>
+<div><div id="cust" class="cust hide"></div><div class="card"><h3 style="margin-top:0">Keranjang</h3><div id="cart" class="mu">Belum ada barang</div>
+ <div class="row"><span>Total</span><span class="big" id="total">Rp0</span></div>
+ <button class="btn" id="bOk" disabled style="margin-top:8px">Konfirmasi</button><button class="btn alt" id="bBatal" style="margin-top:8px">Batal / Kosongkan</button></div></div></div></section>
+<section id="t-antre" class="hide"><input type="search" id="fa" placeholder="Cari nomor antrean atau nama"><div id="antre"></div></section>
+<section id="t-stok" class="hide"><div id="stok"></div></section>
+<section id="t-tutup" class="hide"><div class="card"><button class="btn" id="bTutup">Lihat ringkasan shift saya</button><div id="ringkas"></div></div></section>
+</main>
+<dialog id="dPin"><h3 style="margin-top:0">PIN pelanggan</h3><input type="password" id="pinIn" inputmode="numeric" maxlength="6"><button class="btn" id="bPinOk" style="margin-top:10px">Lanjut</button><button class="btn alt" id="bPinX" style="margin-top:8px">Batal</button></dialog>
+<dialog id="dStruk"><div id="struk"></div><button class="btn" id="bCetak" style="margin-top:10px">Cetak Struk</button><button class="btn alt" id="bTutupS" style="margin-top:8px">Selesai</button></dialog>
+<div id="toast"></div><script src="js/kasir.js"></script></body></html>
