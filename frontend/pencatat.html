@@ -1,0 +1,36 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pencatatan Barang</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#14532d"><link rel="stylesheet" href="css/app.css"><script src="config.js"></script><script src="js/core.js"></script>
+<style>main{max-width:640px}label{display:block;margin:8px 0 3px;color:var(--mu);font-size:14px}select{width:100%;padding:13px;border:2px solid var(--bd);border-radius:2px;background:#fff}
+.ck{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid var(--bd);border-radius:2px;margin-top:6px;font-size:17px}
+.ck input{width:26px;height:26px}.qty{width:90px!important;text-align:center}.low{background:#fff4e5;border:1px solid #f3c27a;border-radius:2px;padding:8px;margin-bottom:8px}</style></head>
+<body><header><img id="hdrLogo" class="hide" alt=""><b id="hdrName">Pencatatan</b><button onclick="logout()">Keluar</button></header>
+<nav id="tabs"><button data-t="hari" class="on">Hari ini</button><button data-t="masuk">Masuk</button><button data-t="order">Pesan</button><button data-t="barang">Barang</button><button data-t="pem">Pemasok</button><button data-t="retur">Retur</button></nav>
+<main>
+<section id="t-hari"><div id="low"></div><input type="search" id="fh" placeholder="Cari barang…"><div id="hari"></div>
+ <button class="btn" id="bHari" style="margin-top:10px;position:sticky;bottom:8px">Simpan barang dijual hari ini</button>
+ <div class="card" style="margin-top:14px"><h3 style="margin-top:0">Hari libur / kantin tutup</h3><input type="date" id="lt"><input type="text" id="lk" placeholder="Keterangan (libur, ujian…)" style="margin-top:6px">
+ <select id="lp" style="margin-top:6px"><option value="Ya">Pre-order ditutup</option><option value="Tidak">Pre-order tetap dibuka</option></select><button class="btn" id="bLibur" style="margin-top:8px">Tambah jadwal</button><div id="liburList"></div></div></section>
+<section id="t-masuk" class="hide"><div class="card"><label>Pemasok</label><select id="mp"></select><label>Tanggal</label><input type="date" id="mt"></div>
+ <input type="search" id="fm" placeholder="Cari barang pemasok ini…" style="margin-top:8px"><div id="masuk"></div><button class="btn" id="bMasuk" style="margin-top:10px;position:sticky;bottom:8px">Simpan barang masuk</button></section>
+<section id="t-order" class="hide"><div class="card"><h3 style="margin-top:0" id="poT">Pesanan baru ke pemasok</h3><label>Pemasok</label><select id="poP"></select>
+ <button class="btn alt sm" id="bPoSug" style="margin-top:8px">Isi dari stok menipis</button><input type="search" id="poF" placeholder="Cari barang…" style="margin-top:8px"><div id="poItems"></div>
+ <button class="btn" id="bPoSave" style="margin-top:10px">Simpan sebagai Draft</button><button class="btn alt hide" id="bPoX" style="margin-top:8px">Batal ubah</button></div><h3>Daftar pesanan</h3><div id="poList"></div></section>
+<section id="t-barang" class="hide"><div class="row" style="border:0"><input type="search" id="fb" placeholder="Cari barang…"><button class="btn sm" id="bNewB" style="margin-left:8px;white-space:nowrap">+ Baru</button></div><div id="barang"></div></section>
+<section id="t-pem" class="hide"><button class="btn" id="bNewP">+ Pemasok baru</button><div id="pemList"></div></section>
+<section id="t-retur" class="hide"><div class="card"><h3 style="margin-top:0">Retur / barang hilang</h3><label>Barang</label><select id="rb"></select><label>Jenis</label>
+ <select id="rj"><option value="retur_belum_terjual">Retur sisa (belum terjual)</option><option value="retur_terjual">Retur barang sudah terjual (cacat)</option><option value="hilang">Hilang / rusak / kedaluwarsa</option></select>
+ <div id="rpWrap" class="hide"><label>Ditanggung</label><select id="rpt"><option value="Kopsis">Kopsis (tetap dibayar ke pemasok)</option><option value="Pemasok">Pemasok</option></select></div>
+ <label>Jumlah</label><input type="number" id="rq" inputmode="numeric"><label>Alasan</label><input type="text" id="ra"><button class="btn" id="bRetur" style="margin-top:8px">Simpan</button></div>
+ <div class="card" style="margin-top:10px"><h3 style="margin-top:0">Opname stok</h3><label>Barang</label><select id="ob"></select><div id="oInfo" class="mu"></div><label>Hasil hitung fisik</label><input type="number" id="oq" inputmode="numeric">
+ <label>Jika kurang, ditanggung</label><select id="op"><option value="Kopsis">Kopsis</option><option value="Pemasok">Pemasok</option></select><label>Alasan</label><input type="text" id="oa" placeholder="hilang / rusak / kedaluwarsa"><button class="btn" id="bOpn" style="margin-top:8px">Catat selisih</button></div></section>
+</main>
+<dialog id="dB"><h3 id="dBt" style="margin-top:0">Barang</h3><label>Nama</label><input type="text" id="bn"><label>Kategori</label><input type="text" id="bk"><label>Pemasok</label><select id="bp"></select>
+ <label>Harga titip</label><input type="number" id="bt" inputmode="numeric"><label>Harga jual</label><input type="number" id="bj" inputmode="numeric"><div id="bw" class="warn hide">Harga jual di bawah harga titip!</div>
+ <label>Satuan</label><input type="text" id="bs" value="pcs"><label>Stok minimum</label><input type="number" id="bm" inputmode="numeric" value="5"><label>Status</label><select id="bst"><option>Aktif</option><option>Nonaktif</option></select>
+ <label>Foto (opsional)</label><img id="bfp" class="hide" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:2px"><input type="file" id="bf" accept="image/*">
+ <button class="btn" id="bSave" style="margin-top:10px">Simpan</button><button class="btn alt" id="bX" style="margin-top:8px">Batal</button></dialog>
+<dialog id="dP"><h3 style="margin-top:0">Pemasok</h3><label>Nama</label><input type="text" id="pn"><label>Nomor WhatsApp</label><input type="text" id="pw" inputmode="tel" placeholder="628…"><label>Alamat (opsional)</label><input type="text" id="pa"><label>Catatan</label><input type="text" id="pc">
+ <button class="btn" id="pSave" style="margin-top:10px">Simpan</button><button class="btn alt" id="pX" style="margin-top:8px">Batal</button></dialog>
+<dialog id="dRec"><h3 style="margin-top:0">Terima barang</h3><div id="recL"></div><button class="btn" id="recOk" style="margin-top:10px">Simpan penerimaan</button><button class="btn alt" id="recX" style="margin-top:8px">Batal</button></dialog>
+<dialog id="dR"><h3 style="margin-top:0">Barang masuk tersimpan</h3><pre id="rTxt" style="white-space:pre-wrap;font:inherit"></pre><button class="btn" id="rShare">Bagikan / Salin</button><button class="btn alt" id="rX" style="margin-top:8px">Tutup</button></dialog>
+<div id="toast"></div><script src="js/pencatat.js"></script></body></html>

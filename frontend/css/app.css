@@ -1,0 +1,56 @@
+/* Tampilan datar ala kasir supermarket: rapat, kotak, mudah dipindai */
+:root{--g:#14532d;--gd:#0d3b20;--gl:#e8f3ec;--ga:#4ca46d;--on:#fff;--bg:#eceeed;--tx:#1a211d;--mu:#5d6862;--bd:#c5ccc8;--er:#b42318;--ok:#067647;--wr:#b54708}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;font:14px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--tx)}
+header{background:var(--g);color:var(--on);padding:0 10px;min-height:44px;display:flex;align-items:center;gap:8px;position:sticky;top:0;z-index:7}
+header img{height:30px;width:auto}header b{flex:1;font-size:15px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header button,header a{background:transparent;color:var(--on);border:1px solid rgba(255,255,255,.55);border-radius:2px;padding:5px 9px;font-size:13px;text-decoration:none;cursor:pointer;white-space:nowrap}
+header a.on{background:var(--on);color:var(--g);border-color:var(--on);font-weight:700}
+header .who{font-size:13px;opacity:.9;white-space:nowrap}
+nav{display:flex;background:#fff;border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:44px;z-index:6}
+nav button{flex:1;min-width:84px;padding:11px 10px;border:0;border-bottom:3px solid transparent;background:#fff;color:var(--tx);font-weight:600;font-size:14px;cursor:pointer}
+nav button.on{background:var(--gl);border-bottom-color:var(--g);color:var(--gd)}
+main{padding:8px;max-width:1200px;margin:auto}main.wide{max-width:1500px}
+.cols{display:grid;gap:8px}@media(min-width:800px){.cols{grid-template-columns:1.4fr 1fr}}
+.card{background:#fff;border:1px solid var(--bd);border-radius:2px;padding:10px}
+h2,h3,h4{margin:10px 0 6px}h3{font-size:15px}h4{font-size:14px;color:var(--gd)}
+label{display:block;margin:8px 0 3px;color:var(--mu);font-size:13px}
+input,select,button,textarea{font:inherit}
+input[type=text],input[type=password],input[type=number],input[type=search],input[type=date],input[type=email],select,textarea{width:100%;padding:8px 9px;border:1px solid #9aa5a0;border-radius:2px;background:#fff;color:var(--tx)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--ga);outline-offset:-1px;border-color:var(--g)}
+.btn{display:block;width:100%;padding:10px 12px;border:1px solid var(--gd);border-radius:2px;background:var(--g);color:var(--on);font-weight:700;font-size:14px;cursor:pointer;text-align:center}
+.btn:hover{background:var(--gd)}.btn.alt{background:#fff;color:var(--gd);border:1px solid var(--g)}.btn.alt:hover{background:var(--gl)}
+.btn.red{background:var(--er);border-color:#8a1a11}.btn:disabled{opacity:.45;cursor:not-allowed}
+.sm{padding:6px 10px;font-size:13px;width:auto;display:inline-block}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:5px;margin-top:6px}
+.item{position:relative;text-align:left;background:#fff;border:1px solid var(--bd);border-radius:2px;padding:6px 7px;min-height:66px;cursor:pointer;user-select:none}
+.item:hover{background:var(--gl);border-color:var(--g)}.item:active{background:#d3e8da}
+.item b{display:block;font-size:13px;line-height:1.2;padding-right:14px}.item span{font-weight:700;color:var(--gd)}.item small{color:var(--mu)}.item.off{opacity:.5}
+.item .star{position:absolute;top:1px;right:2px;font-size:15px;color:#b88a00;background:none;border:0;padding:2px;cursor:pointer}
+.big{font-size:22px;font-weight:800}.mu{color:var(--mu)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e3e7e5}
+.warn{background:#fff7e6;border:1px solid #e6b866;border-left:4px solid var(--wr);border-radius:0;padding:6px 8px;margin:6px 0}
+.cust{background:var(--gl);border:1px solid #b6d3c0;border-left:5px solid var(--g);border-radius:0;padding:8px 10px;margin:0 0 8px}
+.q button{width:28px;height:28px;border:1px solid #9aa5a0;border-radius:2px;background:#fff;font-size:15px;cursor:pointer;padding:0}
+.tag{display:inline-block;padding:1px 7px;border-radius:2px;background:var(--gl);color:var(--gd);font-size:12px;font-weight:700;border:1px solid #b6d3c0}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:6px 7px;border-bottom:1px solid #dde2df;text-align:left}th{background:var(--gl);color:var(--gd);font-weight:700}
+td.n,th.n{text-align:right}tbody tr:nth-child(even){background:#f7f9f8}.wrap{overflow-x:auto}
+.chips{display:flex;gap:4px;overflow-x:auto;padding:3px 0}.chips button{flex:none;padding:6px 11px;border:1px solid #9aa5a0;border-radius:2px;background:#fff;font-size:13px;cursor:pointer}
+.chips button.on{background:var(--g);color:var(--on);border-color:var(--gd)}.chips button:disabled{opacity:.4}
+dialog{border:1px solid #666;border-radius:2px;padding:14px;max-width:94vw;width:400px}dialog::backdrop{background:#0007}
+#toast{position:fixed;left:0;right:0;bottom:0;padding:11px;color:#fff;background:var(--ok);display:none;z-index:99;text-align:center;font-weight:600}
+#toast.er{background:var(--er)}.hide{display:none!important}
+kbd{font:11px monospace;background:#eef1ef;border:1px solid #aeb8b3;border-radius:2px;padding:0 4px;color:var(--mu)}
+/* ===== kasir: tata letak seperti mesin kasir ===== */
+.pos{display:grid;gap:8px}@media(min-width:900px){.pos{grid-template-columns:minmax(0,1.5fr) minmax(340px,1fr);align-items:start}.pos-r{position:sticky;top:96px}}
+.scanbar{background:var(--gd);color:#fff;padding:8px 10px;border-radius:2px}.scanbar label{color:#cfe3d6;margin:0 0 3px;font-weight:700;letter-spacing:.5px}
+.scanbar input{font-size:20px;padding:10px;border:2px solid #fff;font-family:ui-monospace,Consolas,monospace}
+.toolbar{display:flex;gap:6px;margin:6px 0;align-items:center}.toolbar input{flex:1}
+.rc td,.rc th{padding:5px 6px}.rc td.q1{white-space:nowrap}.rc .nm{font-weight:600}.rc .em{color:var(--mu);text-align:center;padding:22px}
+.totbar{background:var(--gd);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;margin-top:8px}
+.totbar span{font-size:14px;letter-spacing:1px;font-weight:700}.totbar b{font-size:34px;font-family:ui-monospace,Consolas,monospace;font-weight:700}
+.pay{display:grid;grid-template-columns:2fr 1fr;gap:6px;margin-top:6px}.pay .btn{padding:14px 10px;font-size:16px}
+/* struk thermal 58mm */
+#struk{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;width:54mm;margin:auto}
+#struk .r{display:flex;justify-content:space-between}#struk hr{border:0;border-top:1px dashed #000}
+@media print{@page{size:58mm auto;margin:2mm}body *{visibility:hidden}#struk,#struk *{visibility:visible}#struk{position:absolute;left:0;top:0;width:54mm}}

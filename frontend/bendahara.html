@@ -1,0 +1,29 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bendahara</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#14532d"><link rel="stylesheet" href="css/app.css"><script src="config.js"></script><script src="js/core.js"></script>
+<style id="pg">@page{size:58mm auto;margin:2mm}</style>
+<style>table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:6px;border-bottom:1px solid var(--bd);text-align:left}td.n,th.n{text-align:right}
+.wrap{overflow-x:auto}dialog.w{width:92vw;max-width:820px}#struk.wide{width:auto;font-family:system-ui,sans-serif;font-size:13px}
+@media print{#struk.wide{width:100%}}.chips button{margin:2px}</style></head>
+<body><header><img id="hdrLogo" class="hide" alt=""><b id="hdrName">Bendahara</b><button onclick="logout()">Keluar</button></header>
+<nav id="tabs"><button data-t="dep" class="on">Deposit</button><button data-t="kor">Koreksi</button><button data-t="pem">Pemasok</button><button data-t="kas">Kas &amp; Laporan</button></nav>
+<main>
+<section id="t-dep"><div class="card"><div id="pk-dep"></div><div id="dep" class="hide"><div id="depInfo" class="cust"></div>
+ <input type="number" id="depN" inputmode="numeric" placeholder="Nominal deposit (Rp)"><div class="chips" id="chips"></div>
+ <button class="btn" id="bDep" style="margin-top:8px">Simpan Deposit</button></div></div></section>
+<section id="t-kor" class="hide"><div class="card"><div id="pk-kor"></div><div id="kor" class="hide"><div id="korInfo" class="cust"></div>
+ <select id="korJ"><option value="koreksi">Koreksi saldo</option><option value="refund">Refund tunai (lulus/pindah)</option></select>
+ <select id="korA" style="margin-top:6px"><option value="1">Tambah saldo (perlu persetujuan Kepala Kantin)</option><option value="-1">Kurangi saldo</option></select>
+ <input type="number" id="korN" inputmode="numeric" placeholder="Nominal (Rp)" style="margin-top:6px">
+ <input type="text" id="korR" placeholder="Alasan (wajib)" style="margin-top:6px"><button class="btn" id="bKor" style="margin-top:8px">Simpan</button></div></div></section>
+<section id="t-pem" class="hide"><div class="card"><div class="row" style="border:0"><input type="date" id="pd" style="width:48%"><input type="date" id="ps" style="width:48%"></div>
+ <button class="btn" id="bHit" style="margin-top:8px">Hitung kewajiban</button></div><div id="pemList"></div><div id="serah"></div></section>
+<section id="t-kas" class="hide"><div class="card"><h3 style="margin-top:0">Rekonsiliasi deposit harian</h3>
+ <input type="date" id="rt"><input type="number" id="rn" inputmode="numeric" placeholder="Uang tunai diterima (Rp)" style="margin-top:6px"><input type="text" id="rc" placeholder="Catatan (opsional)" style="margin-top:6px">
+ <button class="btn" id="bRec" style="margin-top:8px">Simpan rekonsiliasi</button><div id="recRes"></div></div>
+ <div class="card" style="margin-top:10px"><h3 style="margin-top:0">Laporan keuangan</h3><div class="chips"><button class="btn alt sm" data-p="h">Hari ini</button><button class="btn alt sm" data-p="m">7 hari</button><button class="btn alt sm" data-p="b">Bulan ini</button></div>
+ <div class="row" style="border:0"><input type="date" id="ld" style="width:48%"><input type="date" id="ls" style="width:48%"></div>
+ <button class="btn" id="bLap" style="margin-top:8px">Buat laporan</button><div id="lap"></div></div>
+ <div class="card" style="margin-top:10px"><button class="btn alt" id="bLed">Periksa saldo vs ledger</button><div id="ledRes"></div></div></section>
+</main>
+<dialog id="dStruk"><div id="struk"></div><button class="btn" id="bCetak" style="margin-top:10px">Cetak</button><button class="btn alt" id="bCsv" class="hide" style="margin-top:8px;display:none">Unduh CSV</button><button class="btn alt" id="bTutupS" style="margin-top:8px">Tutup</button></dialog>
+<div id="toast"></div><script src="js/bendahara.js"></script></body></html>
