@@ -13,8 +13,30 @@ let _tt;function toast(m,err){const t=$('#toast');t.textContent=m;t.className=er
 async function run(btn,fn){if(btn&&btn.disabled)return;if(btn)btn.disabled=true;try{return await fn();}catch(e){toast(e.message,1);}finally{if(btn)btn.disabled=false;}}
 function poll(fn,ms,active){setInterval(()=>{if(!document.hidden&&(!active||active()))fn().catch(()=>{});},ms);}
 function logout(){sessionStorage.clear();location.href='index.html';}
-function guard(role){if(!sessionStorage.getItem('tok')||sessionStorage.getItem('role')!==role){location.href='index.html';return false;}
-  let t;const rs=()=>{clearTimeout(t);t=setTimeout(logout,30*60*1000);};['click','keydown','touchstart'].forEach(e=>addEventListener(e,rs));rs();return true;}
+const STAFF=['kasir','bendahara','pencatat','kepala'];
+const MENU=[['kepala','Dasbor','kepala.html'],['kasir','Kasir','kasir.html'],['bendahara','Bendahara','bendahara.html'],['pencatat','Pencatatan','pencatat.html']];
+function guard(role){
+  const r=sessionStorage.getItem('role');
+  if(!sessionStorage.getItem('tok')||!(r===role||(r==='kepala'&&STAFF.includes(role)))){location.href='index.html';return false;}
+  let t;const rs=()=>{clearTimeout(t);t=setTimeout(logout,30*60*1000);};['click','keydown','touchstart'].forEach(e=>addEventListener(e,rs));rs();
+  chrome(role,r);
+  if(STAFF.includes(role)){const w=()=>fetch(API_URL+'?ping=1').catch(()=>{});w();setInterval(()=>{if(!document.hidden)w();},240000);} // jaga server tetap siap (lebih cepat)
+  return true;}
+// bilah atas: nama pengguna, menu (khusus Kepala), tombol Ganti Password
+function chrome(role,r){
+  const h=document.querySelector('header'),out=h&&[...h.querySelectorAll('button')].find(b=>/Keluar/i.test(b.textContent));if(!h)return;
+  const add=el=>out?h.insertBefore(el,out):h.appendChild(el);
+  if(r==='kepala'){MENU.forEach(m=>{const a=document.createElement('a');a.href=m[2];a.textContent=m[1];if(m[0]===role)a.className='on';add(a);});}
+  const who=document.createElement('span');who.className='who';who.textContent=sessionStorage.getItem('nama')||'';add(who);
+  const b=document.createElement('button');b.textContent='Ganti Password';b.onclick=openPw;add(b);
+  const d=document.createElement('dialog');d.id='dPw';d.innerHTML='<h3 style="margin-top:0">Ganti Password</h3><label>Password lama</label><input type="password" id="pwL" autocomplete="current-password"><label>Password baru (minimal 4 karakter)</label><input type="password" id="pwB" autocomplete="new-password"><label>Ulangi password baru</label><input type="password" id="pwU" autocomplete="new-password"><label style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="pwS" style="width:auto"> Tampilkan password</label><button class="btn" id="pwOk" style="margin-top:10px">Simpan</button><button class="btn alt" id="pwX" style="margin-top:6px">Batal</button>';
+  document.body.appendChild(d);
+  $('#pwS').onchange=e=>['pwL','pwB','pwU'].forEach(i=>$('#'+i).type=e.target.checked?'text':'password');
+  $('#pwX').onclick=()=>d.close();
+  $('#pwOk').onclick=e=>run(e.target,async()=>{const a=$('#pwL').value,n=$('#pwB').value;
+    if(n.length<4)throw new Error('Password baru minimal 4 karakter');if(n!==$('#pwU').value)throw new Error('Ulangi password baru tidak sama');
+    await api('changePassword',{lama:a,baru:n});d.close();toast('Password berhasil diganti');});}
+function openPw(){['pwL','pwB','pwU'].forEach(i=>$('#'+i).value='');$('#dPw').showModal();$('#pwL').focus();}
 // tema: turunan warna otomatis + cek kontras
 function mix(h,t,a){const n=parseInt(h.slice(1),16),r=n>>16,g=n>>8&255,b=n&255,T=t?255:0,f=x=>Math.round(x+(T-x)*a).toString(16).padStart(2,'0');return '#'+f(r)+f(g)+f(b);}
 function lum(h){const n=parseInt(h.slice(1),16);return [n>>16,n>>8&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);}

@@ -21,5 +21,4 @@ $('#kids').onclick=e=>{const i=e.target.dataset.i;if(i!==undefined){S.cur=Number
 $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===e.target));['jajan','dep','bts','akun'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t));};
 $('#bSave').onclick=e=>run(e.target,async()=>{const a=kid(),n=Number($('#bn').value);if(!(n>=0))throw new Error('Nominal tidak valid');
   await api('waliBatas',{idAnak:a.id,nominal:n});a.batasJajan=n;render();toast('Batas jajan tersimpan');});
-$('#bPin').onclick=e=>run(e.target,async()=>{await api('changePin',{pinLama:$('#pl').value,pinBaru:$('#pb').value});$('#pl').value=$('#pb').value='';toast('PIN diganti');});
 }

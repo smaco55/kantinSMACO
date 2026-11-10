@@ -33,7 +33,7 @@ function renderCats(){const ks=['Semua'].concat([...new Set(S.cat.map(b=>b.kat).
 function renderGrid(){const q=$('#cari').value.toLowerCase();
   if(!S.date){$('#grid').innerHTML='<p class="mu">Belum ada tanggal pengambilan yang tersedia.</p>';return;}
   const l=shown().filter(b=>(S.kat==='Semua'||b.kat===S.kat)&&b.nama.toLowerCase().includes(q));
-  $('#grid').innerHTML=l.map(b=>{const n=S.cart[b.id]||0;return `<div class="item">${b.foto?`<img class="hide" data-f="${esc(b.id)}" data-k="${esc(b.foto)}" alt="" style="width:100%;height:70px;object-fit:cover;border-radius:8px;margin-bottom:4px">`:''}<b>${esc(b.nama)}</b><span>${rp(b.harga)}</span><br><small>sisa ${b.stok}</small>${n?`<div class="qn"><button data-a="-1" data-i="${esc(b.id)}">−</button><b>${n}</b><button data-a="1" data-i="${esc(b.id)}">+</button></div>`:`<div class="qn"><button class="btn sm" style="width:100%" data-a="1" data-i="${esc(b.id)}">Tambah</button></div>`}</div>`;}).join('')||'<p class="mu">Tidak ada barang yang tersedia untuk tanggal ini.</p>';lazyFoto();}
+  $('#grid').innerHTML=l.map(b=>{const n=S.cart[b.id]||0;return `<div class="item">${b.foto?`<img class="hide" data-f="${esc(b.id)}" data-k="${esc(b.foto)}" alt="" style="width:100%;height:70px;object-fit:cover;border-radius:2px;margin-bottom:4px">`:''}<b>${esc(b.nama)}</b><span>${rp(b.harga)}</span><br><small>sisa ${b.stok}</small>${n?`<div class="qn"><button data-a="-1" data-i="${esc(b.id)}">−</button><b>${n}</b><button data-a="1" data-i="${esc(b.id)}">+</button></div>`:`<div class="qn"><button class="btn sm" style="width:100%" data-a="1" data-i="${esc(b.id)}">Tambah</button></div>`}</div>`;}).join('')||'<p class="mu">Tidak ada barang yang tersedia untuk tanggal ini.</p>';lazyFoto();}
 $('#cari').oninput=renderGrid;
 const io='IntersectionObserver' in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);loadFoto(e.target);}}),{rootMargin:'120px'}):null;
 const fq=[];let fr=0;
@@ -76,5 +76,4 @@ poll(()=>loadHist(true),15000,()=>S.tab==='pes'&&S.h.page===0&&S.h.rows.some(o=>
 
 // ----- saldo -----
 async function loadDep(){const r=await api('myDeposits',{page:0,size:20});$('#depL').innerHTML=r.rows.map(d=>`<div class="row"><span>${esc(d.waktu)}</span><b>+ ${rp(d.nominal)}</b></div>`).join('')||'<p class="mu">Belum ada deposit</p>';}
-$('#bPin').onclick=e=>run(e.target,async()=>{await api('changePin',{pinLama:$('#pl').value,pinBaru:$('#pb').value});$('#pl').value=$('#pb').value='';toast('PIN diganti');});
 }

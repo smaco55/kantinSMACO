@@ -1,4 +1,6 @@
 if(guard('kasir')){
+const ROLE=sessionStorage.getItem('role');
+const alasanBatal=()=>{if(ROLE!=='kepala')return '';const a=(prompt('Alasan pembatalan (wajib):')||'').trim();if(!a)throw new Error('Alasan wajib diisi');return a;};
 const S={cart:{},cust:null,metode:'scan',last:null,cat:[],cfg:{},fav:JSON.parse(localStorage.getItem('fav')||'[]'),t:null,q:[]};
 const find=id=>S.cat.find(x=>x.id===id);
 const total=()=>Object.keys(S.cart).reduce((a,id)=>a+S.cart[id]*find(id).harga,0);
@@ -7,6 +9,11 @@ document.addEventListener('click',e=>{if(!/INPUT|TEXTAREA|SELECT/.test(e.target.
 
 async function boot(){const d=await api('init');S.cat=d.katalog;S.cfg=d.cfg;applyTheme(d.cfg);$('#hdrName').textContent='Kasir · '+(d.cfg.nama_kantin||'');renderGrid();focusScan();}
 boot().catch(e=>toast(e.message,1));
+const tick=()=>{$('#clk').textContent=new Date().toLocaleString('id-ID',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});};tick();setInterval(tick,20000);
+document.addEventListener('keydown',e=>{if(e.key==='F2'){e.preventDefault();focusScan();}
+  else if(e.key==='F3'){e.preventDefault();$('#cari').focus();}
+  else if(e.key==='F8'){e.preventDefault();if(!$('#bOk').disabled)$('#bOk').click();}
+  else if(e.key==='Escape'&&!document.querySelector('dialog[open]')&&!$('#t-jual').classList.contains('hide'))resetAll();});
 
 // tab
 $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===e.target));
@@ -22,17 +29,19 @@ $('#grid').onclick=e=>{const f=e.target.dataset.fav;if(f){S.fav=S.fav.includes(f
   const it=e.target.closest('.item');if(it)add(it.dataset.id,1);};
 function add(id,d){const b=find(id),n=(S.cart[id]||0)+d;if(n<=0)delete S.cart[id];else if(n>b.stok){toast('Stok '+b.nama+' hanya '+b.stok,1);return;}else S.cart[id]=n;renderCart();}
 function renderCart(){const ids=Object.keys(S.cart);
-  $('#cart').innerHTML=ids.length?ids.map(id=>{const b=find(id),q=S.cart[id];return `<div class="row"><span>${esc(b.nama)}<br><small class="mu">${rp(b.harga)} × ${q} = ${rp(b.harga*q)}</small></span><span class="q"><button data-d="-1" data-i="${esc(id)}">−</button> <b>${q}</b> <button data-d="1" data-i="${esc(id)}">+</button> <button data-d="-999" data-i="${esc(id)}">✕</button></span></div>`}).join(''):'Belum ada barang';
+  $('#cart').innerHTML=`<table class="rc"><thead><tr><th>Barang</th><th class="n">Harga</th><th>Jml</th><th class="n">Subtotal</th><th></th></tr></thead><tbody>`+(ids.length?ids.map(id=>{const b=find(id),q=S.cart[id];
+   return `<tr><td class="nm">${esc(b.nama)}</td><td class="n">${b.harga.toLocaleString('id-ID')}</td><td class="q1 q"><button data-d="-1" data-i="${esc(id)}">−</button> <b>${q}</b> <button data-d="1" data-i="${esc(id)}">+</button></td><td class="n"><b>${(b.harga*q).toLocaleString('id-ID')}</b></td><td><button class="q" style="border:0;background:none;color:var(--er);font-size:16px;cursor:pointer" data-d="-999" data-i="${esc(id)}" title="Hapus">✕</button></td></tr>`;}).join(''):'<tr><td colspan="5" class="em">Pilih barang di sebelah kiri</td></tr>')+'</tbody></table>';
   $('#total').textContent=rp(total());
   const c=S.cust,short=c&&!$('#susulan').checked&&c.saldo<total();
   $('#bOk').disabled=!(c&&ids.length)||short;
   const w=$('#cust .warn');if(w)w.classList.toggle('hide',!short);}
-$('#cart').onclick=e=>{const i=e.target.dataset.i;if(i)add(i,Number(e.target.dataset.d));};
+$('#cart').onclick=e=>{const b=e.target.closest('button');const i=b&&b.dataset.i;if(i)add(i,Number(b.dataset.d));};
+renderCart();
 
 // pelanggan (terkunci pada hasil scan)
 function setCust(c,metode){clearTimeout(S.t);S.cust=c;S.metode=metode;
   $('#cust').classList.remove('hide');
-  $('#cust').innerHTML=`<img id="cf" alt="" class="hide" style="float:right;width:88px;height:88px;object-fit:cover;border-radius:12px"><div class="mu">${metode==='manual'?'<span class="tag">INPUT MANUAL</span> ':''}Pastikan nama sesuai orangnya</div><div class="big">${esc(c.nama)}</div><div>Kelas: <b>${esc(c.kelas||'-')}</b></div><div>Sisa saldo: <span class="big">${rp(c.saldo)}</span></div><div class="warn hide">Saldo tidak cukup untuk total ini.</div>`;
+  $('#cust').innerHTML=`<img id="cf" alt="" class="hide" style="float:right;width:88px;height:88px;object-fit:cover;border-radius:2px"><div class="mu">${metode==='manual'?'<span class="tag">INPUT MANUAL</span> ':''}Pastikan nama sesuai orangnya</div><div class="big">${esc(c.nama)}</div><div>Kelas: <b>${esc(c.kelas||'-')}</b></div><div>Sisa saldo: <span class="big">${rp(c.saldo)}</span></div><div class="warn hide">Saldo tidak cukup untuk total ini.</div>`;
   if(c.foto)api('fotoGet',{tipe:'siswa',id:c.id}).then(r=>{if(r.data&&S.cust&&S.cust.id===c.id){$('#cf').src=r.data;$('#cf').classList.remove('hide');}}).catch(()=>{});
   S.t=setTimeout(()=>{clearCust();toast('Pelanggan dibatalkan (waktu habis)',1);},60000);renderCart();}
 function clearCust(){clearTimeout(S.t);S.cust=null;$('#cust').classList.add('hide');renderCart();}
@@ -51,17 +60,18 @@ $('#hasilM').onclick=e=>{const id=e.target.dataset.u;if(id)run(e.target,async()=
 $('#susulan').onchange=renderCart;
 
 // konfirmasi
-async function kirim(pin){
+async function kirim(password){
   const items=Object.keys(S.cart).map(id=>({id,qty:S.cart[id]}));
-  const r=await api('order',{customerId:S.cust.id,items,metode:S.metode,susulan:$('#susulan').checked,jenis:'langsung',pin});
+  const r=await api('order',{customerId:S.cust.id,items,metode:S.metode,susulan:$('#susulan').checked,jenis:'langsung',password});
   r.items.forEach(i=>{const b=S.cat.find(x=>x.nama===i.nama);if(b)b.stok-=i.qty;});
   S.last=r.id;$('#bLast').classList.remove('hide');setTimeout(()=>$('#bLast').classList.add('hide'),Number(5)*60000);
   showStruk(r);resetAll();renderGrid();}
 $('#bOk').onclick=e=>run(e.target,async()=>{
-  try{await kirim();}catch(err){if(/PIN diperlukan/.test(err.message)){$('#pinIn').value='';$('#dPin').showModal();}else throw err;}});
+  try{await kirim();}catch(err){if(/Password pelanggan diperlukan/.test(err.message)){$('#pinIn').value='';$('#dPin').showModal();}else throw err;}});
 $('#bPinOk').onclick=e=>run(e.target,async()=>{await kirim($('#pinIn').value);$('#dPin').close();});
+$('#pinIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bPinOk').click();});
 $('#bPinX').onclick=()=>$('#dPin').close();
-$('#bLast').onclick=e=>run(e.target,async()=>{const r=await api('cancel',{id:S.last});toast('Transaksi dibatalkan, saldo dikembalikan');$('#bLast').classList.add('hide');boot();});
+$('#bLast').onclick=e=>run(e.target,async()=>{const r=await api('cancel',{id:S.last,alasan:alasanBatal()});toast('Transaksi dibatalkan, saldo dikembalikan');$('#bLast').classList.add('hide');boot();});
 
 function showStruk(r){const c=S.cfg;
   $('#struk').innerHTML=`<div style="text-align:center"><b>${esc(c.nama_sekolah)}</b><br>${esc(c.nama_kantin)}<br>${esc(c.alamat||'')}</div><hr>${esc(r.waktu)}<br>No: ${esc(r.id)}<br>${esc(r.nama)} (${esc(r.kelas||'-')})<hr>`+
@@ -80,7 +90,7 @@ function renderQ(){const f=$('#fa').value.toLowerCase();
 $('#fa').oninput=renderQ;
 $('#antre').onclick=e=>{const d=e.target.dataset;
   if(d.s)run(e.target,async()=>{await api('setStatus',{id:d.o,status:d.s});await loadQ();});
-  if(d.c&&confirm('Batalkan pesanan ini? Pengembalian saldo mengikuti kebijakan di Pengaturan.'))run(e.target,async()=>{const r=await api('cancel',{id:d.c});toast(r.refund?'Saldo dikembalikan '+rp(r.refund):'Dibatalkan tanpa pengembalian saldo');await loadQ();});};
+  if(d.c&&confirm('Batalkan pesanan ini? Pengembalian saldo mengikuti kebijakan di Pengaturan.'))run(e.target,async()=>{const r=await api('cancel',{id:d.c,alasan:alasanBatal()});toast(r.refund?'Saldo dikembalikan '+rp(r.refund):'Dibatalkan tanpa pengembalian saldo');await loadQ();});};
 poll(loadQ,12000,()=>!$('#t-antre').classList.contains('hide')); // berhenti saat tab tidak terlihat
 
 // tandai habis

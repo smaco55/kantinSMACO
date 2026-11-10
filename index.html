@@ -1,22 +1,26 @@
 <!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kantin Digital Serviam</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#14532d"><link rel="stylesheet" href="css/app.css"><script src="config.js"></script><script src="js/core.js"></script></head>
 <body><header><img id="hdrLogo" class="hide" alt=""><b id="hdrName">Kantin Digital Serviam</b></header>
-<main style="max-width:420px"><div class="card" id="fLogin"><h2>Masuk</h2>
-<label>Nomor induk atau scan kartu</label><input type="text" id="uid" autocomplete="username" autofocus>
-<label>PIN</label><input type="password" id="pin" inputmode="numeric" autocomplete="current-password" style="margin-bottom:12px">
+<main style="max-width:380px;margin-top:24px"><div class="card" id="fLogin"><h3 style="margin-top:0">Masuk</h3>
+<label>Username (atau scan kartu)</label><input type="text" id="uid" autocomplete="username" autocapitalize="none" autofocus>
+<label>Password</label><input type="password" id="pw" autocomplete="current-password" style="margin-bottom:6px">
+<label style="display:flex;gap:6px;align-items:center;margin:4px 0 10px"><input type="checkbox" id="sw" style="width:auto"> Tampilkan password</label>
 <button class="btn" id="bLogin">Masuk</button></div>
-<div class="card hide" id="fPin"><h2>Ganti PIN</h2><p class="mu">PIN awal wajib diganti. Gunakan 6 angka.</p>
-<input type="password" id="pn" inputmode="numeric" maxlength="6" placeholder="PIN baru (6 angka)" style="margin-bottom:12px">
-<button class="btn" id="bPin">Simpan PIN</button></div></main><div id="toast"></div>
+<div class="card hide" id="fPw"><h3 style="margin-top:0">Buat password baru</h3><p class="mu" style="margin-top:0">Password awal dari sekolah perlu diganti. Bebas, minimal 4 karakter (huruf dan angka boleh).</p>
+<label>Password baru</label><input type="password" id="p1" autocomplete="new-password"><label>Ulangi password baru</label><input type="password" id="p2" autocomplete="new-password" style="margin-bottom:10px">
+<button class="btn" id="bPw">Simpan dan masuk</button></div></main><div id="toast"></div>
 <script>
 try{applyTheme(JSON.parse(localStorage.getItem('theme')))}catch(e){}
 const HOME={kasir:'kasir.html',bendahara:'bendahara.html',pencatat:'pencatat.html',kepala:'kepala.html',siswa:'pelanggan.html',guru:'pelanggan.html',wali:'wali.html'};
-let oldPin='';const go=()=>location.href=HOME[sessionStorage.getItem('role')];
-$('#uid').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#pin').focus();}});
-$('#pin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bLogin').click();});
+let lama='';const go=()=>location.href=HOME[sessionStorage.getItem('role')];
+$('#sw').onchange=e=>{$('#pw').type=e.target.checked?'text':'password';};
+$('#uid').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#pw').focus();}});
+$('#pw').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bLogin').click();});
+$('#p2').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bPw').click();});
 $('#bLogin').onclick=e=>run(e.target,async()=>{
-  const r=await api('login',{id:$('#uid').value,pin:$('#pin').value});
+  const r=await api('login',{username:$('#uid').value,password:$('#pw').value});
   sessionStorage.setItem('tok',r.token);sessionStorage.setItem('role',r.role);sessionStorage.setItem('nama',r.nama);
-  if(r.gantiPin){oldPin=$('#pin').value;$('#fLogin').classList.add('hide');$('#fPin').classList.remove('hide');}else go();});
-$('#bPin').onclick=e=>run(e.target,async()=>{await api('changePin',{pinLama:oldPin,pinBaru:$('#pn').value});toast('PIN diganti');setTimeout(go,600);});
+  if(r.gantiPassword){lama=$('#pw').value;$('#fLogin').classList.add('hide');$('#fPw').classList.remove('hide');$('#p1').focus();}else go();});
+$('#bPw').onclick=e=>run(e.target,async()=>{const n=$('#p1').value;if(n.length<4)throw new Error('Password minimal 4 karakter');if(n!==$('#p2').value)throw new Error('Ulangi password tidak sama');
+  await api('changePassword',{lama,baru:n});toast('Password tersimpan');setTimeout(go,500);});
 </script></body></html>

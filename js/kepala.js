@@ -34,8 +34,8 @@ async function openU(u){const d=await api('userDetail',{id:u.id});S.cur=u;
    ${d.wali.length?`<div>Wali: ${d.wali.map(esc).join(', ')}</div>`:''}${d.anak.length?`<div>Anak: ${d.anak.map(esc).join(', ')}</div>`:''}
    <h3>Kartu</h3>${d.kartu.map(k=>`<div class="row"><span>${esc(k.kode)} <small class="mu">${esc(k.jenis)} · ${esc(k.status)}</small></span>${k.status==='Aktif'?`<button class="btn sm red" data-nk="${esc(k.kode)}">Nonaktifkan</button>`:''}</div>`).join('')||'<span class="mu">Belum ada kartu</span>'}
    <div class="row" style="border:0"><input type="text" id="kk" placeholder="Kode kartu baru" style="width:60%"><select id="kj" style="width:38%"><option value="barcode">barcode</option><option value="RFID">RFID</option></select></div><button class="btn sm" data-a="kartuBaru">Daftarkan kartu</button>
-   ${S.cfg.foto_siswa_aktif==='Ya'&&(u.peran==='siswa'||u.peran==='guru')?`<h3>Foto</h3><img id="uf" class="hide" alt="" style="width:110px;height:110px;object-fit:cover;border-radius:12px;display:block;margin-bottom:6px"><input type="file" id="uff" accept="image/*">`:''}
-   <h3>Tindakan</h3><button class="btn sm alt" data-a="resetPin">Reset PIN</button> <button class="btn sm alt" data-a="buka">Buka kunci</button> <button class="btn sm ${u.status==='Aktif'?'red':'alt'}" data-a="${u.status==='Aktif'?'nonaktif':'aktif'}">${u.status==='Aktif'?'Nonaktifkan akun':'Aktifkan akun'}</button>
+   ${S.cfg.foto_siswa_aktif==='Ya'&&(u.peran==='siswa'||u.peran==='guru')?`<h3>Foto</h3><img id="uf" class="hide" alt="" style="width:110px;height:110px;object-fit:cover;border-radius:2px;display:block;margin-bottom:6px"><input type="file" id="uff" accept="image/*">`:''}
+   <h3>Tindakan</h3><input type="text" id="kpw" placeholder="Password baru (kosongkan = dibuat acak)" style="margin-bottom:6px"><button class="btn sm alt" data-a="resetPassword">Reset password</button> <button class="btn sm alt" data-a="buka">Buka kunci</button> <button class="btn sm ${u.status==='Aktif'?'red':'alt'}" data-a="${u.status==='Aktif'?'nonaktif':'aktif'}">${u.status==='Aktif'?'Nonaktifkan akun':'Aktifkan akun'}</button>
    ${u.peran==='siswa'?`<h3>Batas jajan harian (0 = ikut sekolah)</h3><div class="row" style="border:0"><input type="number" id="kb" value="${u.batas}" style="width:60%"><button class="btn sm" data-a="batasJajan">Simpan</button></div>`:''}
    ${u.peran==='wali'?`<h3>Email wali</h3><div class="row" style="border:0"><input type="text" id="ke" value="${esc(d.email)}" placeholder="email@contoh.com" style="width:65%"><button class="btn sm" data-a="email">Simpan</button></div><h3>Kaitkan anak</h3><input type="search" id="kw" placeholder="Cari nama anak"><div id="kwr"></div>`:''}<div id="uRes"></div>`;
   if(d.foto&&$('#uf'))api('fotoGet',{tipe:'siswa',id:u.id}).then(r=>{if(r.data){$('#uf').src=r.data;$('#uf').classList.remove('hide');}}).catch(()=>{});
@@ -46,7 +46,7 @@ $('#dUx').onclick=()=>{$('#dU').close();users();};
 $('#dUb').onclick=e=>{const d=e.target.dataset,u=S.cur;
   if(d.nk)run(e.target,async()=>{if(!confirm('Nonaktifkan kartu ini?'))return;await api('userAdmin',{aksi:'nonaktifKartu',idPengguna:u.id,kode:d.nk});openU(u);});
   if(d.a)run(e.target,async()=>{
-    if(d.a==='resetPin'){if(!confirm('Reset PIN? Pastikan identitas sudah diverifikasi.'))return;const r=await api('userAdmin',{aksi:'resetPin',idPengguna:u.id});$('#uRes').innerHTML=`<div class="cust">PIN baru: <span class="big">${esc(r.pinBaru)}</span><br>Wajib diganti saat login berikutnya. Sampaikan secara tertutup.</div>`;return;}
+    if(d.a==='resetPassword'){const pw=($('#kpw').value||'').trim();if(!confirm('Reset password '+u.nama+(pw?' menjadi yang Anda ketik':' menjadi acak')+'? Pastikan identitas sudah diverifikasi.'))return;const r=await api('userAdmin',{aksi:'resetPassword',idPengguna:u.id,password:pw||undefined});$('#uRes').innerHTML=`<div class="cust">Username: <b>${esc(u.nomorInduk)}</b><br>Password baru: <span class="big">${esc(r.passwordBaru)}</span><br>${r.manual?'':'Pengguna diminta menggantinya saat login berikutnya. '}Sampaikan secara tertutup.</div>`;return;}
     if(d.a==='kartuBaru'){await api('userAdmin',{aksi:'kartuBaru',idPengguna:u.id,kode:$('#kk').value,jenis:$('#kj').value});openU(u);return;}
     if(d.a==='email'){await api('userAdmin',{aksi:'email',idPengguna:u.id,email:$('#ke').value});toast('Email tersimpan');return;}
     if(d.a==='batasJajan'){await api('userAdmin',{aksi:'batasJajan',idPengguna:u.id,nominal:$('#kb').value});toast('Tersimpan');return;}
@@ -56,20 +56,20 @@ document.addEventListener('input',e=>{if(e.target.id!=='kw')return;clearTimeout(
   $('#kwr').innerHTML=r.map(x=>`<div class="row"><span>${esc(x.nama)} <small class="mu">${esc(x.kelas)}</small></span><button class="btn sm" data-an="${esc(x.id)}">Kaitkan</button></div>`).join('');}),350);});
 
 $('#bAdd').onclick=()=>{$('#aR').innerHTML='';$('#dA').showModal();};$('#aX').onclick=()=>{$('#dA').close();users();};
-$('#aS').onclick=e=>run(e.target,async()=>{const r=await api('createUser',{nomorInduk:$('#an').value.trim(),nama:$('#am').value.trim(),peran:$('#ap').value,kelas:$('#ak').value,email:$('#ae').value,kartu:$('#ac').value.trim()||undefined});
-  $('#aR').innerHTML=`<div class="cust">Akun dibuat.<br>PIN awal: <span class="big">${esc(r.pinAwal)}</span><br>Sampaikan secara tertutup.</div>`;['an','am','ak','ae','ac'].forEach(i=>$('#'+i).value='');});
+$('#aS').onclick=e=>run(e.target,async()=>{const r=await api('createUser',{nomorInduk:$('#an').value.trim(),nama:$('#am').value.trim(),peran:$('#ap').value,kelas:$('#ak').value,email:$('#ae').value,password:$('#aw').value||undefined,kartu:$('#ac').value.trim()||undefined});
+  $('#aR').innerHTML=`<div class="cust">Akun dibuat.<br>Username: <b>${esc(r.nomorInduk)}</b><br>Password: <span class="big">${esc(r.passwordAwal)}</span><br>${r.manual?'':'Pengguna diminta mengganti saat login pertama. '}Sampaikan secara tertutup.</div>`;['an','am','ak','ae','ac','aw'].forEach(i=>$('#'+i).value='');});
 
 // impor CSV (dikirim per 30 baris agar tidak melewati batas waktu Apps Script)
 function parseCsv(t){return t.split(/\r?\n/).filter(l=>l.trim()).map(l=>{const o=[];let c='',q=false;for(const ch of l){if(ch==='"')q=!q;else if((ch===','||ch===';')&&!q){o.push(c.trim());c='';}else c+=ch;}o.push(c.trim());return o;});}
 $('#bImp').onclick=()=>{$('#iP').textContent='';$('#iR').innerHTML='';$('#iS').disabled=true;$('#iDl').style.display='none';$('#iF').value='';$('#dI').showModal();};$('#iX').onclick=()=>{$('#dI').close();users();};
 $('#iF').onchange=async e=>{const rows=parseCsv(await e.target.files[0].text());if(rows.length&&/nomor/i.test(rows[0][0]))rows.shift();
-  S.imp=rows.filter(r=>r[0]&&r[1]).map(r=>({nomorInduk:r[0],nama:r[1],peran:(r[2]||'siswa').toLowerCase(),kelas:r[3]||'',email:r[4]||'',kartu:r[5]||undefined}));
+  S.imp=rows.filter(r=>r[0]&&r[1]).map(r=>({nomorInduk:r[0],nama:r[1],peran:(r[2]||'siswa').toLowerCase(),kelas:r[3]||'',email:r[4]||'',kartu:r[5]||undefined,password:r[6]||undefined}));
   $('#iP').textContent=S.imp.length+' baris siap diimpor';$('#iS').disabled=!S.imp.length;};
 $('#iS').onclick=e=>run(e.target,async()=>{S.pins=[];const all=S.imp;
   for(let i=0;i<all.length;i+=30){$('#iP').textContent='Memproses '+Math.min(i+30,all.length)+' / '+all.length+'…';S.pins=S.pins.concat(await api('importUsers',{rows:all.slice(i,i+30)}));}
-  const ok=S.pins.filter(x=>x.pinAwal),bad=S.pins.filter(x=>x.error);$('#iP').textContent='Selesai: '+ok.length+' berhasil, '+bad.length+' gagal';
-  $('#iR').innerHTML=bad.length?tbl([['Nomor induk'],['Kesalahan']],bad.map(x=>[esc(x.nomorInduk),esc(x.error)])):'';$('#iDl').style.display=ok.length?'block':'none';});
-$('#iDl').onclick=()=>dl('pin-awal.csv','nomorInduk,pinAwal\n'+S.pins.filter(x=>x.pinAwal).map(x=>csvq(x.nomorInduk)+','+x.pinAwal).join('\n')+'\n');
+  const ok=S.pins.filter(x=>x.passwordAwal),bad=S.pins.filter(x=>x.error);$('#iP').textContent='Selesai: '+ok.length+' berhasil, '+bad.length+' gagal';
+  $('#iR').innerHTML=bad.length?tbl([['Username'],['Kesalahan']],bad.map(x=>[esc(x.nomorInduk),esc(x.error)])):'';$('#iDl').style.display=ok.length?'block':'none';});
+$('#iDl').onclick=()=>dl('password-awal.csv','username,passwordAwal\n'+S.pins.filter(x=>x.passwordAwal).map(x=>csvq(x.nomorInduk)+','+csvq(x.passwordAwal)).join('\n')+'\n');
 
 // kenaikan kelas
 $('#bNaik').onclick=()=>$('#dN').showModal();$('#nX').onclick=()=>$('#dN').close();
@@ -102,7 +102,7 @@ $('#ch').onclick=e=>{const id=e.target.dataset.h;if(id)run(e.target,async()=>{co
 
 // ===== pengaturan, identitas & tema =====
 const PRE=[['Hijau tua','#14532d'],['Zamrud','#047857'],['Hijau daun','#3f8f3a'],['Hijau botol','#0b4a33']];
-const ATUR=[['jam_batas_preorder','Jam batas pre-order hari yang sama (HH:mm)'],['jam_batas_ambil','Jam batas pengambilan pre-order (HH:mm)'],['batas_batal_menit','Batas pembatalan cepat (menit)'],['nominal_pin','Nominal yang meminta PIN (Rp)'],['batas_jajan_default','Batas jajan harian siswa (Rp, 0 = nonaktif)'],['refund_persen','Persen pengembalian jika kebijakan sebagian'],['maks_darurat','Maksimal nominal mode darurat (Rp)'],['saldo_menipis','Ambang saldo menipis (Rp)']];
+const ATUR=[['jam_batas_preorder','Jam batas pre-order hari yang sama (HH:mm)'],['jam_batas_ambil','Jam batas pengambilan pre-order (HH:mm)'],['batas_batal_menit','Batas pembatalan cepat (menit)'],['nominal_pin','Nominal yang meminta password pelanggan di kasir (Rp)'],['batas_jajan_default','Batas jajan harian siswa (Rp, 0 = nonaktif)'],['refund_persen','Persen pengembalian jika kebijakan sebagian'],['maks_darurat','Maksimal nominal mode darurat (Rp)'],['saldo_menipis','Ambang saldo menipis (Rp)']];
 const PIL=[['kebijakan_refund','Pengembalian pre-order yang sudah diproses',[['penuh','Penuh'],['sebagian','Sebagian'],['tidak','Tidak dikembalikan']]],['cetak_struk','Cetak struk',[['Ya','Aktif'],['Tidak','Nonaktif']]],['preorder_aktif','Pre-order',[['Ya','Aktif'],['Tidak','Nonaktif']]],['notif_email_aktif','Notifikasi email wali (kuota email Google terbatas)',[['Tidak','Nonaktif'],['Ya','Aktif']]],['foto_siswa_aktif','Foto siswa di kasir (butuh izin orang tua dan sekolah)',[['Tidak','Nonaktif'],['Ya','Aktif']]],['kartu_format','Format kode kartu',[['teks','Apa adanya'],['hex_ke_desimal','Heksadesimal ke desimal']]],['kartu_urutan_byte','Urutan byte kartu',[['normal','Normal'],['balik','Dibalik']]]];
 function setForm(){const c=S.cfg;
   $('#setBox').innerHTML=`<h3 style="margin-top:0">Identitas sekolah</h3>${[['nama_sekolah','Nama sekolah'],['nama_kantin','Nama kantin / aplikasi'],['alamat','Alamat'],['telepon','Nomor telepon'],['teks_struk','Teks tambahan struk']].map(f=>`<label>${f[1]}</label><input type="text" data-k="${f[0]}" value="${esc(c[f[0]]||'')}">`).join('')}

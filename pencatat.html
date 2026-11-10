@@ -1,8 +1,8 @@
 <!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pencatatan Barang</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="theme-color" content="#14532d"><link rel="stylesheet" href="css/app.css"><script src="config.js"></script><script src="js/core.js"></script>
-<style>main{max-width:640px}label{display:block;margin:8px 0 3px;color:var(--mu);font-size:14px}select{width:100%;padding:13px;border:2px solid var(--bd);border-radius:10px;background:#fff}
-.ck{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid var(--bd);border-radius:12px;margin-top:6px;font-size:17px}
-.ck input{width:26px;height:26px}.qty{width:90px!important;text-align:center}.low{background:#fff4e5;border:1px solid #f3c27a;border-radius:10px;padding:8px;margin-bottom:8px}</style></head>
+<style>main{max-width:640px}label{display:block;margin:8px 0 3px;color:var(--mu);font-size:14px}select{width:100%;padding:13px;border:2px solid var(--bd);border-radius:2px;background:#fff}
+.ck{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid var(--bd);border-radius:2px;margin-top:6px;font-size:17px}
+.ck input{width:26px;height:26px}.qty{width:90px!important;text-align:center}.low{background:#fff4e5;border:1px solid #f3c27a;border-radius:2px;padding:8px;margin-bottom:8px}</style></head>
 <body><header><img id="hdrLogo" class="hide" alt=""><b id="hdrName">Pencatatan</b><button onclick="logout()">Keluar</button></header>
 <nav id="tabs"><button data-t="hari" class="on">Hari ini</button><button data-t="masuk">Masuk</button><button data-t="order">Pesan</button><button data-t="barang">Barang</button><button data-t="pem">Pemasok</button><button data-t="retur">Retur</button></nav>
 <main>
@@ -27,7 +27,7 @@
 <dialog id="dB"><h3 id="dBt" style="margin-top:0">Barang</h3><label>Nama</label><input type="text" id="bn"><label>Kategori</label><input type="text" id="bk"><label>Pemasok</label><select id="bp"></select>
  <label>Harga titip</label><input type="number" id="bt" inputmode="numeric"><label>Harga jual</label><input type="number" id="bj" inputmode="numeric"><div id="bw" class="warn hide">Harga jual di bawah harga titip!</div>
  <label>Satuan</label><input type="text" id="bs" value="pcs"><label>Stok minimum</label><input type="number" id="bm" inputmode="numeric" value="5"><label>Status</label><select id="bst"><option>Aktif</option><option>Nonaktif</option></select>
- <label>Foto (opsional)</label><img id="bfp" class="hide" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:10px"><input type="file" id="bf" accept="image/*">
+ <label>Foto (opsional)</label><img id="bfp" class="hide" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:2px"><input type="file" id="bf" accept="image/*">
  <button class="btn" id="bSave" style="margin-top:10px">Simpan</button><button class="btn alt" id="bX" style="margin-top:8px">Batal</button></dialog>
 <dialog id="dP"><h3 style="margin-top:0">Pemasok</h3><label>Nama</label><input type="text" id="pn"><label>Nomor WhatsApp</label><input type="text" id="pw" inputmode="tel" placeholder="628…"><label>Alamat (opsional)</label><input type="text" id="pa"><label>Catatan</label><input type="text" id="pc">
  <button class="btn" id="pSave" style="margin-top:10px">Simpan</button><button class="btn alt" id="pX" style="margin-top:8px">Batal</button></dialog>
