@@ -7,12 +7,13 @@
  <div class="pos-l">
   <div class="scanbar"><label>SCAN KARTU PELANGGAN &nbsp;<kbd>F2</kbd></label><input type="text" id="scan" placeholder="Arahkan barcode scanner ke kartu…" autocomplete="off" inputmode="none"></div>
   <div class="toolbar"><input type="search" id="cari" placeholder="Cari barang…  (F3)"><button class="btn alt sm" id="bManual">Kartu lupa / manual</button><button class="btn alt sm hide" id="bLast">Batalkan transaksi terakhir</button></div>
-  <div id="manual" class="card hide" style="margin-bottom:6px"><div class="warn" style="margin-top:0">Input manual dicatat di log. Pelanggan wajib memasukkan passwordnya.</div>
+  <div id="manual" class="card hide" style="margin-bottom:6px"><div class="warn" style="margin-top:0">Input manual dicatat di log. Pelanggan tetap wajib memasukkan PIN-nya.</div>
    <input type="search" id="cariM" placeholder="Nama atau username/NIS"><div id="hasilM"></div>
    <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="susulan" style="width:auto"> Mode darurat (internet bermasalah, input susulan)</label></div>
   <div class="grid" id="grid"></div></div>
  <div class="pos-r">
   <div id="cust" class="cust hide"></div>
+  <div id="pinbox" class="hide" style="margin:0 0 8px;background:#fff;border:1px solid var(--bd);border-left:5px solid var(--er);padding:8px 10px"><label style="margin:0 0 3px;font-weight:700;color:var(--tx)">PIN PELANGGAN (6 angka) <kbd>Enter</kbd></label><input type="password" id="pinK" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="● ● ● ● ● ●" style="font-size:22px;letter-spacing:8px;text-align:center"><div class="mu" style="margin-top:3px;font-size:12px">Pelanggan mengetik PIN-nya sendiri. Kartu lain: tekan <kbd>F2</kbd>.</div></div>
   <div class="card" style="padding:0"><div class="wrap" id="cart"></div></div>
   <div class="totbar"><span>TOTAL</span><b id="total">Rp0</b></div>
   <div class="pay"><button class="btn" id="bOk" disabled>KONFIRMASI <kbd>F8</kbd></button><button class="btn alt" id="bBatal">Batal <kbd>Esc</kbd></button></div>
@@ -21,6 +22,5 @@
 <section id="t-stok" class="hide"><div id="stok"></div></section>
 <section id="t-tutup" class="hide"><div class="card" style="max-width:420px"><button class="btn" id="bTutup">Lihat ringkasan shift saya</button><div id="ringkas"></div></div></section>
 </main>
-<dialog id="dPin"><h3 style="margin-top:0">Password pelanggan</h3><p class="mu" style="margin-top:0">Minta pelanggan mengetik passwordnya sendiri.</p><input type="password" id="pinIn" autocomplete="off"><button class="btn" id="bPinOk" style="margin-top:10px">Lanjut</button><button class="btn alt" id="bPinX" style="margin-top:6px">Batal</button></dialog>
 <dialog id="dStruk"><div id="struk"></div><button class="btn" id="bCetak" style="margin-top:10px">Cetak Struk</button><button class="btn alt" id="bTutupS" style="margin-top:6px">Selesai</button></dialog>
 <div id="toast"></div><script src="js/kasir.js"></script></body></html>

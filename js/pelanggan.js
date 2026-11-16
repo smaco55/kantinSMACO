@@ -3,10 +3,11 @@ if((ROLE==='siswa'||ROLE==='guru')&&guard(ROLE)){
 const S={cat:[],cfg:{},libur:[],saldo:0,cart:{},date:'',kat:'Semua',tab:'pesan',h:{page:0,rows:[]}};
 const find=id=>S.cat.find(x=>x.id===id),today=()=>new Date().toLocaleDateString('sv-SE'),hm=()=>new Date().toTimeString().slice(0,5);
 const total=()=>Object.keys(S.cart).reduce((a,id)=>a+S.cart[id]*find(id).harga,0),count=()=>Object.values(S.cart).reduce((a,b)=>a+b,0);
+const pinWarn=()=>{$('#pinW').innerHTML=S.pinDefault?'<div class="warn"><b>PIN kamu masih 123456.</b> Segera ganti agar saldo aman jika kartu hilang atau dipinjam.</div>':'';};
 const setSaldo=n=>{S.saldo=n;$('#saldoH').textContent=rp(n);$('#saldoB').textContent=rp(n);
   $('#saldoW').innerHTML=n<Number(S.cfg.saldo_menipis||0)?'<div class="warn">Saldo menipis. Segera isi saldo ke bendahara.</div>':'';};
 
-async function boot(){const d=await api('init');S.cat=d.katalog;S.cfg=d.cfg;S.libur=d.libur;applyTheme(d.cfg);$('#hdrName').textContent=d.cfg.nama_kantin||'Kantin';setSaldo(d.profil.saldo);
+async function boot(){const d=await api('init');S.cat=d.katalog;S.cfg=d.cfg;S.libur=d.libur;applyTheme(d.cfg);$('#hdrName').textContent=d.cfg.nama_kantin||'Kantin';setSaldo(d.profil.saldo);S.pinDefault=d.profil.pinDefault;pinWarn();
   const ds=dates();const ok=ds.find(x=>!x.note);S.date=ok?ok.s:'';
   $('#info').innerHTML=d.cfg.preorder_aktif!=='Ya'?'<div class="warn">Pre-order sedang dimatikan. Silakan beli langsung di kasir.</div>':`<div class="mu">Pre-order hari ini ditutup pukul ${esc(d.cfg.jam_batas_preorder)}. Pesan sehari sebelumnya juga bisa.</div>`;
   renderDates();renderCats();renderGrid();}
@@ -54,7 +55,8 @@ $('#bCart').onclick=()=>{renderCart();$('#dC').showModal();};$('#bBack').onclick
 $('#cl').onclick=e=>{const i=e.target.dataset.i;if(i)chg(i,Number(e.target.dataset.a));};
 $('#bOk').onclick=e=>run(e.target,async()=>{
   const items=Object.keys(S.cart).map(id=>({id,qty:S.cart[id]}));
-  const r=await api('order',{items,tanggalAmbil:S.date});
+  S.rid=S.rid||rid();
+  const r=await api('order',{items,tanggalAmbil:S.date,rid:S.rid});S.rid=null;
   r.items.forEach(i=>{const b=S.cat.find(x=>x.nama===i.nama);if(b){b.stok-=i.qty;if(b.stok<=0)b.tersedia=false;}});
   setSaldo(r.saldoSesudah);S.cart={};$('#dC').close();renderGrid();updBar();
   $('#dDb').innerHTML=`<div class="mu">Pesanan diterima</div><div class="ant">#${esc(r.antrean)}</div><div>Nomor antrean · ambil <b>${esc(r.tanggalAmbil)}</b></div><div class="warn" style="text-align:left">Tunjukkan nomor ini ke kasir saat mengambil. Pesanan yang tidak diambil tidak mendapat pengembalian saldo.</div>`+
@@ -65,13 +67,20 @@ $('#bDone').onclick=()=>$('#dD').close();
 // ----- pesananku -----
 const act=s=>['Baru','Diproses','Siap'].includes(s);
 async function loadHist(reset,more){if(reset&&!more)S.h.page=0;
-  const r=await api('myHistory',{page:S.h.page,size:20});S.h.rows=more?S.h.rows.concat(r.rows):(S.h.page===0?r.rows:S.h.rows);S.h.total=r.total;renderHist();}
-function renderHist(){$('#pesL').innerHTML=S.h.rows.map(o=>`<div class="card ${o.status==='Siap'?'siap':''}" style="margin-bottom:8px"><div class="row" style="border:0"><span>${o.jenis==='preorder'?`<span class="ant">#${esc(o.antrean)}</span>`:'<span class="tag">Beli langsung</span>'}</span><span class="tag">${o.status==='Siap'?'Siap diambil!':esc(o.status)}</span></div>
+  const hr=$('#hh').value==='30';
+  const r=await api('myHistory',hr&&S.h.page===0?{page:0,size:20,hari:30,ringkas:1}:{page:S.h.page,size:20,hari:hr?30:0});
+  if(r.ringkas)S.h.ring=r;S.h.rows=more?S.h.rows.concat(r.rows):(S.h.page===0?r.rows:S.h.rows);S.h.total=r.total;renderHist();}
+function renderHist(){
+  const g=S.h.ring;$('#ringk').innerHTML=g&&$('#hh').value==='30'?`<div class="card" style="margin-bottom:8px"><b>Belanja 30 hari terakhir: ${rp(g.belanja)}</b>${g.ringkas.length?`<table style="margin-top:6px"><tr><th>Barang</th><th class="n">Jumlah</th><th class="n">Nilai</th></tr>${g.ringkas.slice(0,10).map(x=>`<tr><td>${esc(x.nama)}</td><td class="n">${x.jumlah}</td><td class="n">${rp(x.nilai)}</td></tr>`).join('')}</table>`:'<div class="mu">Belum ada belanja</div>'}</div>`:'';
+  $('#pesL').innerHTML=S.h.rows.map(o=>`<div class="card ${o.status==='Siap'?'siap':''}" style="margin-bottom:8px"><div class="row" style="border:0"><span>${o.jenis==='preorder'?`<span class="ant">#${esc(o.antrean)}</span>`:'<span class="tag">Beli langsung</span>'}</span><span class="tag">${o.status==='Siap'?'Siap diambil!':esc(o.status)}</span></div>
   <div class="mu">${esc(o.waktu)}${o.jenis==='preorder'?' · ambil '+esc(o.ambil):''}</div>${o.items.map(i=>`<div>${i.qty} × ${esc(i.nama)}</div>`).join('')}<div class="row"><b>${rp(o.total)}</b>${o.refund?`<span class="mu">dikembalikan ${rp(o.refund)}</span>`:''}</div>
   ${o.jenis==='preorder'&&o.status==='Baru'?`<button class="btn sm red" data-c="${esc(o.id)}">Batalkan pesanan</button>`:''}</div>`).join('')||'<p class="mu">Belum ada pesanan</p>';
   $('#pesMore').classList.toggle('hide',S.h.rows.length>=S.h.total);}
 $('#pesMore').onclick=e=>run(e.target,async()=>{S.h.page++;await loadHist(false,true);});
 $('#pesL').onclick=e=>{const id=e.target.dataset.c;if(id&&confirm('Batalkan pesanan ini? Saldo dikembalikan penuh.'))run(e.target,async()=>{const r=await api('cancel',{id});setSaldo(S.saldo+r.refund);toast('Dibatalkan. Saldo dikembalikan '+rp(r.refund));S.cat=(await api('init')).katalog;loadHist(true);});};
+$('#bPk').onclick=e=>run(e.target,async()=>{const b=$('#pkB').value;if(!/^\d{6}$/.test(b))throw new Error('PIN baru harus 6 angka');if(b!==$('#pkU').value)throw new Error('Ulangi PIN tidak sama');
+  await api('changePinKartu',{lama:$('#pkL').value,baru:b});['pkL','pkB','pkU'].forEach(i=>$('#'+i).value='');S.pinDefault=false;pinWarn();toast('PIN berhasil diganti');});
+$('#hh').onchange=()=>loadHist(true);
 poll(()=>loadHist(true),15000,()=>S.tab==='pes'&&S.h.page===0&&S.h.rows.some(o=>act(o.status))); // berhenti jika tab tidak terlihat atau tak ada pesanan aktif
 
 // ----- saldo -----

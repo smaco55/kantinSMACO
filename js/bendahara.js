@@ -21,7 +21,7 @@ function picker(box,cb){
 const info=c=>`<div class="big">${esc(c.nama)}</div><div>Kelas: <b>${esc(c.kelas||'-')}</b></div><div>Saldo saat ini: <span class="big">${rp(c.saldo)}</span></div>`;
 
 // ===== deposit =====
-picker($('#pk-dep'),c=>{S.dep=c;$('#depInfo').innerHTML=info(c);$('#dep').classList.remove('hide');$('#depN').value='';$('#depN').focus();});
+picker($('#pk-dep'),c=>{S.dep=c;S.depRid=null;$('#depInfo').innerHTML=info(c);$('#dep').classList.remove('hide');$('#depN').value='';$('#depN').focus();});
 $('#chips').innerHTML=[5000,10000,20000,50000].map(n=>`<button class="btn alt sm" data-n="${n}">${rp(n)}</button>`).join('');
 $('#chips').onclick=e=>{if(e.target.dataset.n)$('#depN').value=e.target.dataset.n;};
 let _pg=null;
@@ -34,7 +34,8 @@ const head=()=>`<div style="text-align:center"><b>${esc(S.cfg.nama_sekolah||'')}
 $('#bDep').onclick=e=>run(e.target,async()=>{
   const n=Number($('#depN').value);if(!(n>0))throw new Error('Isi nominal deposit');
   if(n>=500000&&!confirm('Nominal besar: '+rp(n)+'. Lanjutkan?'))return;
-  const r=await api('deposit',{customerId:S.dep.id,nominal:n});
+  S.depRid=S.depRid||rid();
+  const r=await api('deposit',{customerId:S.dep.id,nominal:n,rid:S.depRid});S.depRid=null;
   cetak(head()+`<b>BUKTI DEPOSIT</b><br>${esc(r.waktu)}<br>No: ${esc(r.id)}<br>${esc(r.nama)} (${esc(r.kelas||'-')})<hr><div class="r"><span>Deposit</span><b>${fn(r.nominal)}</b></div><div class="r"><span>Saldo sekarang</span><b>${fn(r.saldo)}</b></div><hr><div style="text-align:center">Simpan bukti ini</div>`);
   $('#dep').classList.add('hide');S.dep=null;toast('Deposit tersimpan');});
 
@@ -97,4 +98,20 @@ $('#bLap').onclick=e=>run(e.target,async()=>{
 $('#lap').onclick=e=>{if(e.target.id==='bLapCetak'&&S.rep)cetak(S.rep.html,true,S.rep.csv);};
 $('#bLed').onclick=e=>run(e.target,async()=>{const r=await api('verifyLedger');
   $('#ledRes').innerHTML=r.length?`<div class="warn">${r.length} akun tidak cocok:</div>`+r.map(x=>`<div class="row"><span>${esc(x.nama)}</span><span>saldo ${rp(x.saldo)} / ledger ${rp(x.ledger)}</span></div>`).join(''):'<div class="cust">✔ Semua saldo sama dengan jumlah ledger.</div>';});
+
+// ===== buku kas =====
+$('#bkd').value=D().slice(0,8)+'01';$('#bks').value=D();
+$('#bkChips').onclick=e=>{const p=e.target.dataset.p;if(!p)return;$('#bks').value=D();$('#bkd').value=p==='h'?D():p==='m'?ago(6):D().slice(0,8)+'01';};
+const tw=w=>String(w).replace(/ 00:00:00$/,'').slice(0,16);
+$('#bBk').onclick=e=>run(e.target,async()=>{
+  const dari=$('#bkd').value,sampai=$('#bks').value,r=await api('bukuKas',{dari,sampai});
+  const rows=[['Buku Kas '+(S.cfg.nama_kantin||'')],['Periode '+dari+' s/d '+sampai],[],['Waktu','Keterangan','Masuk','Keluar','Saldo'],['','Saldo awal','','',r.saldoAwal]]
+    .concat(r.baris.map(x=>[tw(x.waktu),x.ket,x.masuk||'',x.keluar||'',x.saldo])).concat([['','Total',r.totalMasuk,r.totalKeluar,r.saldoAkhir]]);
+  const html=`<h3>Buku Kas</h3><p>${esc(S.cfg.nama_sekolah||'')} · ${esc(S.cfg.nama_kantin||'')}<br>Periode ${esc(dari)} s/d ${esc(sampai)}</p><div class="wrap"><table><tr><th>Waktu</th><th>Keterangan</th><th class="n">Masuk</th><th class="n">Keluar</th><th class="n">Saldo</th></tr>
+   <tr><td></td><td><b>Saldo awal</b></td><td></td><td></td><td class="n"><b>${fn(r.saldoAwal)}</b></td></tr>${r.baris.map(x=>`<tr><td>${esc(tw(x.waktu))}</td><td>${esc(x.ket)}</td><td class="n">${x.masuk?fn(x.masuk):''}</td><td class="n">${x.keluar?fn(x.keluar):''}</td><td class="n">${fn(x.saldo)}</td></tr>`).join('')}
+   <tr><th></th><th>Total</th><th class="n">${fn(r.totalMasuk)}</th><th class="n">${fn(r.totalKeluar)}</th><th class="n">${fn(r.saldoAkhir)}</th></tr></table></div>${r.diarsipkan?'<p class="mu">Saldo awal sudah memuat transaksi yang diarsipkan.</p>':''}`;
+  S.bk={html,rows,csv:rows.map(x=>x.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n'),nama:'buku-kas-'+dari+'_'+sampai};
+  $('#bkR').innerHTML=`<div class="row" style="border:0;gap:6px;justify-content:flex-start;margin-top:8px"><button class="btn sm" id="bkPr">Cetak / PDF</button><button class="btn sm alt" id="bkXl">Unduh Excel</button></div><div class="wrap">${html.replace(/^<h3>.*?<\/p>/s,'')}</div>`;});
+$('#bkR').onclick=e=>{if(!S.bk)return;if(e.target.id==='bkPr')cetak(S.bk.html,true,S.bk.csv);
+  if(e.target.id==='bkXl')unduhXlsx(S.bk.nama,[{name:'Buku Kas',rows:S.bk.rows,headRow:3,boldRows:[0]}]);};
 }

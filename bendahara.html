@@ -23,7 +23,10 @@
  <div class="card" style="margin-top:10px"><h3 style="margin-top:0">Laporan keuangan</h3><div class="chips"><button class="btn alt sm" data-p="h">Hari ini</button><button class="btn alt sm" data-p="m">7 hari</button><button class="btn alt sm" data-p="b">Bulan ini</button></div>
  <div class="row" style="border:0"><input type="date" id="ld" style="width:48%"><input type="date" id="ls" style="width:48%"></div>
  <button class="btn" id="bLap" style="margin-top:8px">Buat laporan</button><div id="lap"></div></div>
+ <div class="card" style="margin-top:10px"><h3 style="margin-top:0">Buku kas</h3><p class="mu" style="margin-top:0">Kas masuk (deposit) dan kas keluar (refund, bayar pemasok, penyerahan ke Kopsis). Saldo akhir = uang tunai yang seharusnya dipegang bendahara.</p>
+ <div class="chips" id="bkChips"><button class="btn alt sm" data-p="h">Hari ini</button><button class="btn alt sm" data-p="m">7 hari</button><button class="btn alt sm" data-p="b">Bulan ini</button></div>
+ <div class="row" style="border:0"><input type="date" id="bkd" style="width:48%"><input type="date" id="bks" style="width:48%"></div><button class="btn" id="bBk" style="margin-top:8px">Tampilkan buku kas</button><div id="bkR"></div></div>
  <div class="card" style="margin-top:10px"><button class="btn alt" id="bLed">Periksa saldo vs ledger</button><div id="ledRes"></div></div></section>
 </main>
 <dialog id="dStruk"><div id="struk"></div><button class="btn" id="bCetak" style="margin-top:10px">Cetak</button><button class="btn alt" id="bCsv" class="hide" style="margin-top:8px;display:none">Unduh CSV</button><button class="btn alt" id="bTutupS" style="margin-top:8px">Tutup</button></dialog>
-<div id="toast"></div><script src="js/bendahara.js"></script></body></html>
+<div id="toast"></div><script src="js/xlsx.js"></script><script src="js/bendahara.js"></script></body></html>

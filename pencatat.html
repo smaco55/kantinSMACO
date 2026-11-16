@@ -4,7 +4,7 @@
 .ck{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid var(--bd);border-radius:2px;margin-top:6px;font-size:17px}
 .ck input{width:26px;height:26px}.qty{width:90px!important;text-align:center}.low{background:#fff4e5;border:1px solid #f3c27a;border-radius:2px;padding:8px;margin-bottom:8px}</style></head>
 <body><header><img id="hdrLogo" class="hide" alt=""><b id="hdrName">Pencatatan</b><button onclick="logout()">Keluar</button></header>
-<nav id="tabs"><button data-t="hari" class="on">Hari ini</button><button data-t="masuk">Masuk</button><button data-t="order">Pesan</button><button data-t="barang">Barang</button><button data-t="pem">Pemasok</button><button data-t="retur">Retur</button></nav>
+<nav id="tabs"><button data-t="hari" class="on">Hari ini</button><button data-t="masuk">Masuk</button><button data-t="order">Pesan</button><button data-t="barang">Barang</button><button data-t="pem">Pemasok</button><button data-t="retur">Retur</button><button data-t="stok">Stok</button></nav>
 <main>
 <section id="t-hari"><div id="low"></div><input type="search" id="fh" placeholder="Cari barang…"><div id="hari"></div>
  <button class="btn" id="bHari" style="margin-top:10px;position:sticky;bottom:8px">Simpan barang dijual hari ini</button>
@@ -17,6 +17,9 @@
  <button class="btn" id="bPoSave" style="margin-top:10px">Simpan sebagai Draft</button><button class="btn alt hide" id="bPoX" style="margin-top:8px">Batal ubah</button></div><h3>Daftar pesanan</h3><div id="poList"></div></section>
 <section id="t-barang" class="hide"><div class="row" style="border:0"><input type="search" id="fb" placeholder="Cari barang…"><button class="btn sm" id="bNewB" style="margin-left:8px;white-space:nowrap">+ Baru</button></div><div id="barang"></div></section>
 <section id="t-pem" class="hide"><button class="btn" id="bNewP">+ Pemasok baru</button><div id="pemList"></div></section>
+<section id="t-stok" class="hide"><div class="card"><h3 style="margin-top:0">Kartu stok &amp; mutasi barang</h3><label>Barang</label><select id="skB"></select>
+ <div class="chips" id="skChips"><button class="btn alt sm" data-p="h">Hari ini</button><button class="btn alt sm" data-p="m">7 hari</button><button class="btn alt sm" data-p="b">Bulan ini</button></div>
+ <div class="row" style="border:0"><input type="date" id="skD" style="width:48%"><input type="date" id="skS" style="width:48%"></div><button class="btn" id="bSk" style="margin-top:8px">Tampilkan</button><div id="skR"></div></div></section>
 <section id="t-retur" class="hide"><div class="card"><h3 style="margin-top:0">Retur / barang hilang</h3><label>Barang</label><select id="rb"></select><label>Jenis</label>
  <select id="rj"><option value="retur_belum_terjual">Retur sisa (belum terjual)</option><option value="retur_terjual">Retur barang sudah terjual (cacat)</option><option value="hilang">Hilang / rusak / kedaluwarsa</option></select>
  <div id="rpWrap" class="hide"><label>Ditanggung</label><select id="rpt"><option value="Kopsis">Kopsis (tetap dibayar ke pemasok)</option><option value="Pemasok">Pemasok</option></select></div>
@@ -33,4 +36,4 @@
  <button class="btn" id="pSave" style="margin-top:10px">Simpan</button><button class="btn alt" id="pX" style="margin-top:8px">Batal</button></dialog>
 <dialog id="dRec"><h3 style="margin-top:0">Terima barang</h3><div id="recL"></div><button class="btn" id="recOk" style="margin-top:10px">Simpan penerimaan</button><button class="btn alt" id="recX" style="margin-top:8px">Batal</button></dialog>
 <dialog id="dR"><h3 style="margin-top:0">Barang masuk tersimpan</h3><pre id="rTxt" style="white-space:pre-wrap;font:inherit"></pre><button class="btn" id="rShare">Bagikan / Salin</button><button class="btn alt" id="rX" style="margin-top:8px">Tutup</button></dialog>
-<div id="toast"></div><script src="js/pencatat.js"></script></body></html>
+<div id="toast"></div><script src="js/xlsx.js"></script><script src="js/pencatat.js"></script></body></html>

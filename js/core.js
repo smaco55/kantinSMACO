@@ -13,6 +13,7 @@ let _tt;function toast(m,err){const t=$('#toast');t.textContent=m;t.className=er
 async function run(btn,fn){if(btn&&btn.disabled)return;if(btn)btn.disabled=true;try{return await fn();}catch(e){toast(e.message,1);}finally{if(btn)btn.disabled=false;}}
 function poll(fn,ms,active){setInterval(()=>{if(!document.hidden&&(!active||active()))fn().catch(()=>{});},ms);}
 function logout(){sessionStorage.clear();location.href='index.html';}
+const rid=()=>'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); // kunci transaksi: kirim ulang tidak jadi ganda
 const STAFF=['kasir','bendahara','pencatat','kepala'];
 const MENU=[['kepala','Dasbor','kepala.html'],['kasir','Kasir','kasir.html'],['bendahara','Bendahara','bendahara.html'],['pencatat','Pencatatan','pencatat.html']];
 function guard(role){

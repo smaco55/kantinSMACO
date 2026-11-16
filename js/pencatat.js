@@ -13,8 +13,8 @@ load().catch(e=>toast(e.message,1));
 $('#mt').value=D();$('#lt').value=D();
 
 $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===e.target));
-  ['hari','masuk','order','barang','pem','retur'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t));};
-function renderAll(){renderPoForm();renderHari();renderMasuk();renderBarang();renderPem();renderRetur();}
+  ['hari','masuk','order','barang','pem','retur','stok'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t));};
+function renderAll(){renderStokSel();renderPoForm();renderHari();renderMasuk();renderBarang();renderPem();renderRetur();}
 
 // ===== barang dijual hari ini + jadwal =====
 function renderHari(){
@@ -118,4 +118,23 @@ $('#poList').onclick=e=>{const d=e.target.dataset;
 $('#recX').onclick=()=>$('#dRec').close();
 $('#recOk').onclick=e=>run(e.target,async()=>{const items=[...document.querySelectorAll('#recL input')].map(i=>({id:i.dataset.id,qty:Number(i.value)})).filter(i=>i.qty>0);
   const r=await api('orderReceive',{id:S.rec.id,items});$('#dRec').close();toast('Barang masuk dicatat · '+r.status);await load();});
+
+// ===== kartu stok & mutasi barang =====
+$('#skD').value=D().slice(0,8)+'01';$('#skS').value=D();
+const agoD=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toLocaleDateString('sv-SE');};
+$('#skChips').onclick=e=>{const p=e.target.dataset.p;if(!p)return;$('#skS').value=D();$('#skD').value=p==='h'?D():p==='m'?agoD(6):D().slice(0,8)+'01';};
+function renderStokSel(){const cur=$('#skB').value;$('#skB').innerHTML='<option value="">Semua barang (rekap mutasi)</option>'+opts(act(),x=>`<option value="${esc(x.ID)}">${esc(x.Nama)}</option>`);if(cur)$('#skB').value=cur;}
+const tw2=w=>String(w).replace(/ 00:00:00$/,'').slice(0,16);
+$('#bSk').onclick=e=>run(e.target,async()=>{
+  const dari=$('#skD').value,sampai=$('#skS').value,id=$('#skB').value;let html,sheet;
+  if(!id){const r=await api('rekapStok',{dari,sampai});
+    const rows=[['Mutasi barang '+dari+' s/d '+sampai],[],['Barang','Satuan','Stok awal','Masuk','Terjual','Retur/hilang','Stok akhir']].concat(r.map(x=>[x.nama,x.satuan,x.awal,x.masuk,x.terjual,x.lain,x.akhir]));
+    html=`<div class="wrap"><table><tr><th>Barang</th><th class="n">Awal</th><th class="n">Masuk</th><th class="n">Terjual</th><th class="n">Retur/hilang</th><th class="n">Akhir</th></tr>${r.map(x=>`<tr><td>${esc(x.nama)}</td><td class="n">${x.awal}</td><td class="n">${x.masuk}</td><td class="n">${x.terjual}</td><td class="n">${x.lain}</td><td class="n"><b>${x.akhir}</b></td></tr>`).join('')}</table></div>`;
+    sheet={name:'Mutasi Barang',rows,headRow:2,boldRows:[0]};S.skNama='mutasi-barang-'+dari+'_'+sampai;}
+  else{const r=await api('kartuStok',{idBarang:id,dari,sampai});
+    const rows=[['Kartu stok: '+r.barang.nama+' ('+r.barang.satuan+')'],['Periode '+dari+' s/d '+sampai],[],['Waktu','Jenis','Keterangan','Masuk','Keluar','Saldo'],['','Saldo awal','','','',r.saldoAwal]].concat(r.baris.map(x=>[tw2(x.waktu),x.jenis,x.ket,x.masuk||'',x.keluar||'',x.saldo]));
+    html=`<div class="mu">Stok sekarang: <b>${r.barang.stok}</b> ${esc(r.barang.satuan)}</div><div class="wrap"><table><tr><th>Waktu</th><th>Jenis</th><th>Ket.</th><th class="n">Masuk</th><th class="n">Keluar</th><th class="n">Saldo</th></tr><tr><td></td><td><b>Saldo awal</b></td><td></td><td></td><td></td><td class="n"><b>${r.saldoAwal}</b></td></tr>${r.baris.map(x=>`<tr><td>${esc(tw2(x.waktu))}</td><td>${esc(x.jenis)}</td><td>${esc(x.ket)}</td><td class="n">${x.masuk||''}</td><td class="n">${x.keluar||''}</td><td class="n">${x.saldo}</td></tr>`).join('')}</table></div>`;
+    sheet={name:'Kartu Stok',rows,headRow:3,boldRows:[0]};S.skNama='kartu-stok-'+r.barang.nama.replace(/[^A-Za-z0-9]+/g,'-')+'_'+dari+'_'+sampai;}
+  S.skSheet=sheet;$('#skR').innerHTML='<button class="btn sm alt" id="skXl" style="margin:8px 0">Unduh Excel</button>'+html;});
+$('#skR').onclick=e=>{if(e.target.id==='skXl'&&S.skSheet)unduhXlsx(S.skNama,[S.skSheet]);};
 }

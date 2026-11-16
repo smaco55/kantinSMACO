@@ -11,9 +11,12 @@
 <main>
 <section id="t-pesan"><div id="info"></div><label>Ambil pada</label><div class="chips" id="dates"></div>
  <input type="search" id="cari" placeholder="Cari makanan atau minuman…" style="margin-top:6px"><div class="chips" id="cats"></div><div class="grid" id="grid"></div></section>
-<section id="t-pes" class="hide"><div id="pesL"></div><button class="btn alt hide" id="pesMore" style="margin-top:8px">Muat lagi</button></section>
+<section id="t-pes" class="hide"><select id="hh" style="margin-bottom:8px"><option value="30">30 hari terakhir</option><option value="0">Semua riwayat</option></select><div id="ringk"></div><div id="pesL"></div><button class="btn alt hide" id="pesMore" style="margin-top:8px">Muat lagi</button></section>
 <section id="t-saldo" class="hide"><div class="card"><div class="mu">Sisa saldo</div><div class="big" id="saldoB"></div><div id="saldoW"></div><p class="mu">Isi saldo dengan menyerahkan uang tunai ke bendahara.</p></div>
- <h3>Riwayat deposit</h3><div id="depL"></div></section>
+ <div class="card" style="margin-top:10px"><h3 style="margin-top:0">PIN belanja di kasir</h3><div id="pinW"></div>
+ <p class="mu" style="margin-top:0">Saat kartu discan di kasir, kamu mengetik PIN ini. Jaga kerahasiaannya dan jangan beri tahu siapa pun.</p>
+ <label>PIN lama</label><input type="password" id="pkL" inputmode="numeric" maxlength="6" autocomplete="off"><label>PIN baru (6 angka)</label><input type="password" id="pkB" inputmode="numeric" maxlength="6" autocomplete="off"><label>Ulangi PIN baru</label><input type="password" id="pkU" inputmode="numeric" maxlength="6" autocomplete="off">
+ <button class="btn" id="bPk" style="margin-top:8px">Simpan PIN</button></div><h3>Riwayat deposit</h3><div id="depL"></div></section>
 </main>
 <div class="bar hide" id="bar"><button class="btn" id="bCart"></button></div>
 <dialog id="dC"><h3 style="margin-top:0">Pesananmu</h3><div id="cl"></div><div class="row"><b>Total</b><span class="big" id="ct"></span></div><div class="mu" id="cs"></div>
