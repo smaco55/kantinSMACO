@@ -4,7 +4,7 @@
 .ck{display:flex;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid var(--bd);border-radius:2px;margin-top:6px;font-size:17px}
 .ck input{width:26px;height:26px}.qty{width:90px!important;text-align:center}.low{background:#fff4e5;border:1px solid #f3c27a;border-radius:2px;padding:8px;margin-bottom:8px}</style></head>
 <body><header><img id="hdrLogo" class="hide" alt=""><b id="hdrName">Pencatatan</b><button onclick="logout()">Keluar</button></header>
-<nav id="tabs"><button data-t="hari" class="on">Hari ini</button><button data-t="masuk">Masuk</button><button data-t="order">Pesan</button><button data-t="barang">Barang</button><button data-t="pem">Pemasok</button><button data-t="retur">Retur</button><button data-t="stok">Stok</button></nav>
+<nav id="tabs"><button data-t="hari" class="on">Hari ini</button><button data-t="masuk">Masuk</button><button data-t="rekap">Rekap pesanan</button><button data-t="order">Pesan</button><button data-t="barang">Barang</button><button data-t="pem">Pemasok</button><button data-t="retur">Retur</button><button data-t="stok">Stok</button></nav>
 <main>
 <section id="t-hari"><div id="low"></div><input type="search" id="fh" placeholder="Cari barang…"><div id="hari"></div>
  <button class="btn" id="bHari" style="margin-top:10px;position:sticky;bottom:8px">Simpan barang dijual hari ini</button>
@@ -12,6 +12,8 @@
  <select id="lp" style="margin-top:6px"><option value="Ya">Pre-order ditutup</option><option value="Tidak">Pre-order tetap dibuka</option></select><button class="btn" id="bLibur" style="margin-top:8px">Tambah jadwal</button><div id="liburList"></div></div></section>
 <section id="t-masuk" class="hide"><div class="card"><label>Pemasok</label><select id="mp"></select><label>Tanggal</label><input type="date" id="mt"></div>
  <input type="search" id="fm" placeholder="Cari barang pemasok ini…" style="margin-top:8px"><div id="masuk"></div><button class="btn" id="bMasuk" style="margin-top:10px;position:sticky;bottom:8px">Simpan barang masuk</button></section>
+<section id="t-rekap" class="hide"><div class="card"><h3 style="margin-top:0">Rekap pesanan untuk pemasok</h3><p class="mu" style="margin-top:0">Total pre-order murid per barang untuk satu tanggal ambil. Kirim ke pemasok agar jumlah yang disiapkan tepat dan tidak bersisa.</p>
+ <label>Tanggal ambil</label><div class="row" style="border:0;gap:6px"><input type="date" id="rkT" style="flex:1"><button class="btn sm" id="bRk" style="white-space:nowrap">Tampilkan</button></div><div id="rkR"></div></div></section>
 <section id="t-order" class="hide"><div class="card"><h3 style="margin-top:0" id="poT">Pesanan baru ke pemasok</h3><label>Pemasok</label><select id="poP"></select>
  <button class="btn alt sm" id="bPoSug" style="margin-top:8px">Isi dari stok menipis</button><input type="search" id="poF" placeholder="Cari barang…" style="margin-top:8px"><div id="poItems"></div>
  <button class="btn" id="bPoSave" style="margin-top:10px">Simpan sebagai Draft</button><button class="btn alt hide" id="bPoX" style="margin-top:8px">Batal ubah</button></div><h3>Daftar pesanan</h3><div id="poList"></div></section>
@@ -29,7 +31,9 @@
 </main>
 <dialog id="dB"><h3 id="dBt" style="margin-top:0">Barang</h3><label>Nama</label><input type="text" id="bn"><label>Kategori</label><input type="text" id="bk"><label>Pemasok</label><select id="bp"></select>
  <label>Harga titip</label><input type="number" id="bt" inputmode="numeric"><label>Harga jual</label><input type="number" id="bj" inputmode="numeric"><div id="bw" class="warn hide">Harga jual di bawah harga titip!</div>
- <label>Satuan</label><input type="text" id="bs" value="pcs"><label>Stok minimum</label><input type="number" id="bm" inputmode="numeric" value="5"><label>Status</label><select id="bst"><option>Aktif</option><option>Nonaktif</option></select>
+ <label>Satuan</label><input type="text" id="bs" value="pcs"><label>Stok minimum</label><input type="number" id="bm" inputmode="numeric" value="5"><label>Jenis barang</label><select id="bjn"><option value="Stok">Barang stok (dititip, ada stok)</option><option value="Pesan">Dibuat sesuai pesanan (tanpa stok, mis. nasi goreng)</option></select>
+ <div id="bkqW" class="hide"><label>Kuota per tanggal ambil (0 = tanpa batas)</label><input type="number" id="bkq" inputmode="numeric" value="0"><div class="mu" style="font-size:12px">Barang ini hanya bisa dipesan lewat pre-order. Jumlah yang harus disiapkan pemasok dilihat di tab Rekap pesanan.</div></div>
+ <label>Status</label><select id="bst"><option>Aktif</option><option>Nonaktif</option></select>
  <label>Foto (opsional)</label><img id="bfp" class="hide" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:2px"><input type="file" id="bf" accept="image/*">
  <button class="btn" id="bSave" style="margin-top:10px">Simpan</button><button class="btn alt" id="bX" style="margin-top:8px">Batal</button></dialog>
 <dialog id="dP"><h3 style="margin-top:0">Pemasok</h3><label>Nama</label><input type="text" id="pn"><label>Nomor WhatsApp</label><input type="text" id="pw" inputmode="tel" placeholder="628…"><label>Alamat (opsional)</label><input type="text" id="pa"><label>Catatan</label><input type="text" id="pc">
