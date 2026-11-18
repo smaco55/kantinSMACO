@@ -1,7 +1,7 @@
 if(guard('pencatat')){
 const S={b:[],p:[],low:[],libur:[],edB:null,edP:null,q:{},av:null};
 const D=()=>new Date().toLocaleDateString('sv-SE');
-const act=()=>S.b.filter(x=>x.Status==='Aktif');
+const act=()=>S.b.filter(x=>x.Status==='Aktif'&&x.Jenis!=='Pesan'); // barang tanpa stok tidak ikut daftar stok
 const pName=id=>(S.p.find(x=>x.ID===id)||{}).Nama||'-';
 const opts=(arr,f)=>arr.map(f).join('');
 async function load(){
@@ -13,7 +13,7 @@ load().catch(e=>toast(e.message,1));
 $('#mt').value=D();$('#lt').value=D();
 
 $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===e.target));
-  ['hari','masuk','order','barang','pem','retur','stok'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t));};
+  ['hari','masuk','rekap','order','barang','pem','retur','stok'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t));};
 function renderAll(){renderStokSel();renderPoForm();renderHari();renderMasuk();renderBarang();renderPem();renderRetur();}
 
 // ===== barang dijual hari ini + jadwal =====
@@ -43,12 +43,13 @@ $('#rShare').onclick=()=>{if(navigator.share)navigator.share({text:S.rt}).catch(
 
 // ===== kelola barang =====
 function renderBarang(){const q=$('#fb').value.toLowerCase();
-  $('#barang').innerHTML=S.b.filter(x=>x.Nama.toLowerCase().includes(q)).map(x=>`<div class="card" style="margin-top:6px;${x.Status==='Aktif'?'':'opacity:.5'}" data-e="${esc(x.ID)}"><b>${esc(x.Nama)}</b> <span class="tag">${esc(x.Kategori||'-')}</span><div class="row" style="border:0"><span>${esc(pName(x.IDPemasok))}</span><span>stok <b>${x.Stok}</b></span></div><div class="mu">Titip ${rp(x.HargaTitip)} · Jual ${rp(x.HargaJual)}</div></div>`).join('');}
+  $('#barang').innerHTML=S.b.filter(x=>x.Nama.toLowerCase().includes(q)).map(x=>`<div class="card" style="margin-top:6px;${x.Status==='Aktif'?'':'opacity:.5'}" data-e="${esc(x.ID)}"><b>${esc(x.Nama)}</b> <span class="tag">${esc(x.Kategori||'-')}</span><div class="row" style="border:0"><span>${esc(pName(x.IDPemasok))}</span><span>${x.Jenis==='Pesan'?'<b>sesuai pesanan</b>'+(Number(x.Kuota)?' · kuota '+x.Kuota:''):'stok <b>'+x.Stok+'</b>'}</span></div><div class="mu">Titip ${rp(x.HargaTitip)} · Jual ${rp(x.HargaJual)}</div></div>`).join('');}
 $('#fb').oninput=renderBarang;
+const jn=()=>$('#bkqW').classList.toggle('hide',$('#bjn').value!=='Pesan');$('#bjn').onchange=jn;
 function openB(x){S.edB=x||null;$('#dBt').textContent=x?'Ubah barang':'Barang baru';
   $('#bp').innerHTML=opts(S.p,p=>`<option value="${esc(p.ID)}">${esc(p.Nama)}</option>`);
   $('#bn').value=x?x.Nama:'';$('#bk').value=x?x.Kategori:'';$('#bp').value=x?x.IDPemasok:(S.p[0]||{}).ID;$('#bt').value=x?x.HargaTitip:'';$('#bj').value=x?x.HargaJual:'';
-  $('#bs').value=x?x.Satuan:'pcs';$('#bm').value=x?x.StokMin:5;$('#bst').value=x?x.Status:'Aktif';warn();S.fotoData=null;$('#bf').value='';$('#bfp').classList.add('hide');
+  $('#bs').value=x?x.Satuan:'pcs';$('#bm').value=x?x.StokMin:5;$('#bst').value=x?x.Status:'Aktif';$('#bjn').value=x&&x.Jenis==='Pesan'?'Pesan':'Stok';$('#bkq').value=x&&x.Kuota?x.Kuota:0;jn();warn();S.fotoData=null;$('#bf').value='';$('#bfp').classList.add('hide');
   if(x&&x.Foto)api('fotoGet',{tipe:'barang',id:x.ID}).then(r=>{if(r.data){$('#bfp').src=r.data;$('#bfp').classList.remove('hide');}}).catch(()=>{});$('#dB').showModal();}
 $('#bf').onchange=async e=>{if(!e.target.files[0])return;try{S.fotoData=await compressImg(e.target.files[0],320,70*1024);$('#bfp').src=S.fotoData;$('#bfp').classList.remove('hide');}catch(err){toast(err.message,1);e.target.value='';S.fotoData=null;}};
 const warn=()=>$('#bw').classList.toggle('hide',!(Number($('#bj').value)<Number($('#bt').value)));
@@ -57,7 +58,7 @@ $('#bNewB').onclick=()=>{if(!S.p.length)return toast('Tambah pemasok dulu',1);op
 $('#barang').onclick=e=>{const c=e.target.closest('[data-e]');if(c)openB(S.b.find(x=>x.ID===c.dataset.e));};
 $('#bX').onclick=()=>$('#dB').close();
 $('#bSave').onclick=e=>run(e.target,async()=>{
-  const r=await api('saveBarang',{id:S.edB&&S.edB.ID,nama:$('#bn').value.trim(),kategori:$('#bk').value,idPemasok:$('#bp').value,hargaTitip:$('#bt').value,hargaJual:$('#bj').value,satuan:$('#bs').value,stokMin:$('#bm').value,status:$('#bst').value});
+  const r=await api('saveBarang',{id:S.edB&&S.edB.ID,nama:$('#bn').value.trim(),kategori:$('#bk').value,idPemasok:$('#bp').value,hargaTitip:$('#bt').value,hargaJual:$('#bj').value,satuan:$('#bs').value,stokMin:$('#bm').value,status:$('#bst').value,jenis:$('#bjn').value,kuota:$('#bkq').value});
   if(S.fotoData){await api('fotoSet',{tipe:'barang',id:r.id,data:S.fotoData});S.fotoData=null;}
   $('#dB').close();await load();toast(r.peringatan||'Tersimpan',!!r.peringatan);});
 
@@ -137,4 +138,20 @@ $('#bSk').onclick=e=>run(e.target,async()=>{
     sheet={name:'Kartu Stok',rows,headRow:3,boldRows:[0]};S.skNama='kartu-stok-'+r.barang.nama.replace(/[^A-Za-z0-9]+/g,'-')+'_'+dari+'_'+sampai;}
   S.skSheet=sheet;$('#skR').innerHTML='<button class="btn sm alt" id="skXl" style="margin:8px 0">Unduh Excel</button>'+html;});
 $('#skR').onclick=e=>{if(e.target.id==='skXl'&&S.skSheet)unduhXlsx(S.skNama,[S.skSheet]);};
+
+// ===== rekap pesanan untuk pemasok =====
+const addDs=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return d.toLocaleDateString('sv-SE');};
+$('#rkT').value=addDs(D(),1);
+const rkText=(r,p)=>`Pesanan untuk tanggal ${r.tanggal}\nKepada: ${p.pemasok}\n`+p.items.filter(i=>i.kirim>0).map(i=>`- ${i.nama}: ${i.kirim} ${i.satuan||''}`).join('\n')+`\n${r.ditutup?'Jumlah sudah final.':'Jumlah bisa bertambah sampai '+r.batas+'; kami kabari bila ada perubahan.'}\nMohon konfirmasi. Terima kasih.`;
+$('#bRk').onclick=e=>run(e.target,async()=>{
+  const r=await api('rekapPesanan',{tanggal:$('#rkT').value});S.rk=r;
+  const st=r.ditutup?'<div class="cust"><b>Pemesanan sudah ditutup.</b> Jumlah di bawah sudah final.</div>':`<div class="warn"><b>Pemesanan masih dibuka</b> sampai ${esc(r.batas)}. Jumlah masih bisa bertambah, jadi kirim rekap final setelah ditutup.</div>`;
+  $('#rkR').innerHTML=st+`<div class="mu" style="margin:6px 0">${r.jumlahPesanan} pesanan murid untuk tanggal ${esc(r.tanggal)}</div>`+
+   (r.pemasok.length?r.pemasok.map((p,i)=>`<div class="card" style="margin-bottom:8px"><b>${esc(p.pemasok)}</b> <span class="tag">${p.total} porsi</span>
+    <div class="wrap"><table><tr><th>Barang</th><th class="n">Dipesan</th><th class="n">Perlu dikirim</th></tr>${p.items.map(x=>`<tr><td>${esc(x.nama)}${x.jenis==='Pesan'?' <small class="mu">(sesuai pesanan)</small>':` <small class="mu">(stok ${x.stok})</small>`}</td><td class="n">${x.jumlah}</td><td class="n"><b>${x.kirim}</b></td></tr>`).join('')}</table></div>
+    <div class="row" style="border:0;gap:6px;justify-content:flex-start;margin-top:6px"><button class="btn sm" data-rw="${i}">Kirim WhatsApp</button><button class="btn sm alt" data-rc="${i}">Salin teks</button></div></div>`).join('')+'<button class="btn alt sm" id="rkXl">Unduh Excel</button>':'<p class="mu">Belum ada pre-order untuk tanggal ini.</p>');});
+$('#rkR').onclick=e=>{const d=e.target.dataset,r=S.rk;if(!r)return;
+  if(d.rw!==undefined){const p=r.pemasok[d.rw],n=waNum(p.wa);if(!n)return toast('Nomor WhatsApp pemasok belum diisi',1);window.open('https://wa.me/'+n+'?text='+encodeURIComponent(rkText(r,p)),'_blank');}
+  if(d.rc!==undefined)navigator.clipboard.writeText(rkText(r,r.pemasok[d.rc])).then(()=>toast('Teks rekap disalin'));
+  if(e.target.id==='rkXl'){const rows=[['Rekap pesanan untuk pemasok, tanggal ambil '+r.tanggal],[],['Pemasok','Barang','Dipesan','Perlu dikirim']];r.pemasok.forEach(p=>p.items.forEach(x=>rows.push([p.pemasok,x.nama,x.jumlah,x.kirim])));unduhXlsx('rekap-pesanan-'+r.tanggal,[{name:'Rekap Pesanan',rows,headRow:2,boldRows:[0]}]);}};
 }

@@ -22,7 +22,7 @@ $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySel
 
 // katalog
 function renderGrid(){const q=$('#cari').value.toLowerCase();
-  const l=S.cat.filter(b=>b.stok>0&&b.nama.toLowerCase().includes(q)).sort((a,b)=>(S.fav.includes(b.id)-S.fav.includes(a.id))||a.nama.localeCompare(b.nama));
+  const l=S.cat.filter(b=>b.jenis!=='Pesan'&&b.stok>0&&b.nama.toLowerCase().includes(q)).sort((a,b)=>(S.fav.includes(b.id)-S.fav.includes(a.id))||a.nama.localeCompare(b.nama));
   $('#grid').innerHTML=l.map(b=>`<div class="item ${b.tersedia?'':'off'}" data-id="${esc(b.id)}"><button class="star" data-fav="${esc(b.id)}">${S.fav.includes(b.id)?'★':'☆'}</button><b>${esc(b.nama)}</b><span>${rp(b.harga)}</span><br><small>stok ${b.stok}</small></div>`).join('')||'<p class="mu">Tidak ada barang</p>';}
 $('#cari').oninput=renderGrid;
 $('#grid').onclick=e=>{const f=e.target.dataset.fav;if(f){S.fav=S.fav.includes(f)?S.fav.filter(x=>x!==f):S.fav.concat(f);localStorage.setItem('fav',JSON.stringify(S.fav));renderGrid();return;}

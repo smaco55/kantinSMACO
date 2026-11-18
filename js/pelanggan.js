@@ -9,7 +9,7 @@ const setSaldo=n=>{S.saldo=n;$('#saldoH').textContent=rp(n);$('#saldoB').textCon
 
 async function boot(){const d=await api('init');S.cat=d.katalog;S.cfg=d.cfg;S.libur=d.libur;applyTheme(d.cfg);$('#hdrName').textContent=d.cfg.nama_kantin||'Kantin';setSaldo(d.profil.saldo);S.pinDefault=d.profil.pinDefault;pinWarn();
   const ds=dates();const ok=ds.find(x=>!x.note);S.date=ok?ok.s:'';
-  $('#info').innerHTML=d.cfg.preorder_aktif!=='Ya'?'<div class="warn">Pre-order sedang dimatikan. Silakan beli langsung di kasir.</div>':`<div class="mu">Pre-order hari ini ditutup pukul ${esc(d.cfg.jam_batas_preorder)}. Pesan sehari sebelumnya juga bisa.</div>`;
+  $('#info').innerHTML=d.cfg.preorder_aktif!=='Ya'?'<div class="warn">Pre-order sedang dimatikan. Silakan beli langsung di kasir.</div>':`<div class="mu">${Number(d.cfg.preorder_h_minus)>0?'Pemesanan ditutup <b>'+(Number(d.cfg.preorder_h_minus)===1?'sehari sebelum':d.cfg.preorder_h_minus+' hari sebelum')+'</b> tanggal ambil, pukul '+esc(d.cfg.jam_batas_preorder)+'.':'Pemesanan untuk hari ini ditutup pukul '+esc(d.cfg.jam_batas_preorder)+'. Pesan sehari sebelumnya juga bisa.'}</div>`;
   renderDates();renderCats();renderGrid();}
 boot().catch(e=>toast(e.message,1));
 
@@ -18,10 +18,12 @@ $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;S.tab=t;document.
   if(t==='pes')loadHist(true);if(t==='saldo')loadDep();};
 
 // ----- pilih tanggal ambil -----
+const addD=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return d.toLocaleDateString('sv-SE');};
 function dates(){const out=[],now=new Date();
   for(let i=0;i<7;i++){const d=new Date(now);d.setDate(d.getDate()+i);const s=d.toLocaleDateString('sv-SE');
     const lib=S.libur.find(l=>String(l.Tanggal).slice(0,10)===s&&l.TutupPreorder!=='Tidak');
-    let note='';if(lib)note=lib.Keterangan||'Tutup';else if(i===0&&hm()>String(S.cfg.jam_batas_preorder))note='Sudah lewat batas jam';
+    const hmin=Math.max(0,Number(S.cfg.preorder_h_minus)||0),dl=addD(s,-hmin)+' '+String(S.cfg.jam_batas_preorder||'09:00');
+    let note='';if(lib)note=lib.Keterangan||'Tutup';else if(new Date().toLocaleDateString('sv-SE')+' '+hm()>dl)note='Pemesanan ditutup';
     if(S.cfg.preorder_aktif!=='Ya')note='Pre-order mati';
     out.push({s,note,label:i===0?'Hari ini':i===1?'Besok':d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'})});}
   return out;}
@@ -29,12 +31,12 @@ function renderDates(){$('#dates').innerHTML=dates().map(d=>`<button data-d="${d
 $('#dates').onclick=e=>{const d=e.target.closest('button');if(!d||d.disabled)return;S.date=d.dataset.d;S.cart={};renderDates();renderGrid();updBar();};
 
 // ----- katalog -----
-const shown=()=>S.cat.filter(b=>S.date===today()?b.tersedia:b.stok>0);
+const shown=()=>S.cat.filter(b=>b.jenis==='Pesan'?b.tersedia:(S.date===today()?b.tersedia:b.stok>0));
 function renderCats(){const ks=['Semua'].concat([...new Set(S.cat.map(b=>b.kat).filter(Boolean))]);$('#cats').innerHTML=ks.map(k=>`<button data-k="${esc(k)}" class="${k===S.kat?'on':''}">${esc(k)}</button>`).join('');}
 function renderGrid(){const q=$('#cari').value.toLowerCase();
   if(!S.date){$('#grid').innerHTML='<p class="mu">Belum ada tanggal pengambilan yang tersedia.</p>';return;}
   const l=shown().filter(b=>(S.kat==='Semua'||b.kat===S.kat)&&b.nama.toLowerCase().includes(q));
-  $('#grid').innerHTML=l.map(b=>{const n=S.cart[b.id]||0;return `<div class="item">${b.foto?`<img class="hide" data-f="${esc(b.id)}" data-k="${esc(b.foto)}" alt="" style="width:100%;height:70px;object-fit:cover;border-radius:2px;margin-bottom:4px">`:''}<b>${esc(b.nama)}</b><span>${rp(b.harga)}</span><br><small>sisa ${b.stok}</small>${n?`<div class="qn"><button data-a="-1" data-i="${esc(b.id)}">−</button><b>${n}</b><button data-a="1" data-i="${esc(b.id)}">+</button></div>`:`<div class="qn"><button class="btn sm" style="width:100%" data-a="1" data-i="${esc(b.id)}">Tambah</button></div>`}</div>`;}).join('')||'<p class="mu">Tidak ada barang yang tersedia untuk tanggal ini.</p>';lazyFoto();}
+  $('#grid').innerHTML=l.map(b=>{const n=S.cart[b.id]||0;return `<div class="item">${b.foto?`<img class="hide" data-f="${esc(b.id)}" data-k="${esc(b.foto)}" alt="" style="width:100%;height:70px;object-fit:cover;border-radius:2px;margin-bottom:4px">`:''}<b>${esc(b.nama)}</b><span>${rp(b.harga)}</span><br><small>${b.jenis==='Pesan'?'dibuat sesuai pesanan'+(b.kuota?' · maks '+b.kuota:''):'sisa '+b.stok}</small>${n?`<div class="qn"><button data-a="-1" data-i="${esc(b.id)}">−</button><b>${n}</b><button data-a="1" data-i="${esc(b.id)}">+</button></div>`:`<div class="qn"><button class="btn sm" style="width:100%" data-a="1" data-i="${esc(b.id)}">Tambah</button></div>`}</div>`;}).join('')||'<p class="mu">Tidak ada barang yang tersedia untuk tanggal ini.</p>';lazyFoto();}
 $('#cari').oninput=renderGrid;
 const io='IntersectionObserver' in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);loadFoto(e.target);}}),{rootMargin:'120px'}):null;
 const fq=[];let fr=0;
@@ -57,7 +59,7 @@ $('#bOk').onclick=e=>run(e.target,async()=>{
   const items=Object.keys(S.cart).map(id=>({id,qty:S.cart[id]}));
   S.rid=S.rid||rid();
   const r=await api('order',{items,tanggalAmbil:S.date,rid:S.rid});S.rid=null;
-  r.items.forEach(i=>{const b=S.cat.find(x=>x.nama===i.nama);if(b){b.stok-=i.qty;if(b.stok<=0)b.tersedia=false;}});
+  r.items.forEach(i=>{const b=S.cat.find(x=>x.nama===i.nama);if(b&&b.jenis!=='Pesan'){b.stok-=i.qty;if(b.stok<=0)b.tersedia=false;}});
   setSaldo(r.saldoSesudah);S.cart={};$('#dC').close();renderGrid();updBar();
   $('#dDb').innerHTML=`<div class="mu">Pesanan diterima</div><div class="ant">#${esc(r.antrean)}</div><div>Nomor antrean · ambil <b>${esc(r.tanggalAmbil)}</b></div><div class="warn" style="text-align:left">Tunjukkan nomor ini ke kasir saat mengambil. Pesanan yang tidak diambil tidak mendapat pengembalian saldo.</div>`+
    r.items.map(i=>`<div class="row"><span>${i.qty} × ${esc(i.nama)}</span><span>${rp(i.sub)}</span></div>`).join('')+`<div class="row"><b>Total</b><b>${rp(r.total)}</b></div><div class="mu">Sisa saldo ${rp(r.saldoSesudah)}</div>`;
