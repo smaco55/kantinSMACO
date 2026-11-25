@@ -1,7 +1,7 @@
 if(guard('wali')){
 const S={kids:[],cur:0,cfg:{}};
 const kid=()=>S.kids[S.cur];
-async function boot(){const [d,k]=await Promise.all([api('init'),api('wali')]);S.cfg=d.cfg;applyTheme(d.cfg);$('#hdrName').textContent=(d.cfg.nama_kantin||'Kantin')+' · Wali';S.kids=k;render();}
+async function boot(){const [d,k]=await Promise.all([api('init'),api('wali')]);S.cfg=d.cfg;applyTheme(d.cfg);S.kids=k;render();}
 boot().catch(e=>toast(e.message,1));
 async function notif(aktif){const n=await api('waliNotif',aktif===undefined?{}:{aktif});
   $('#nt').innerHTML='<h3 style="margin-top:0">Notifikasi email</h3>'+(!n.sistemAktif?'<p class="mu">Fitur notifikasi belum diaktifkan oleh sekolah.</p>':!n.adaEmail?'<p class="mu">Alamat email Anda belum terdaftar. Hubungi Kepala Kantin.</p>':`<p>Ringkasan jajan harian dan peringatan saldo menipis dikirim ke <b>${esc(n.email)}</b> (maksimal satu email per hari, hanya jika ada aktivitas).</p><div class="row" style="border:0"><span class="tag">${n.aktif?'Aktif':'Nonaktif'}</span><button class="btn sm ${n.aktif?'alt':''}" id="bNt">${n.aktif?'Matikan':'Aktifkan'}</button></div>`);
@@ -19,7 +19,7 @@ function render(){
   $('#dd').innerHTML=a.deposit.map(d=>`<div class="row"><span>${esc(d.waktu)}</span><b>+ ${rp(d.nominal)}</b></div>`).join('')||'<p class="mu">Belum ada deposit</p>';
   $('#bs').textContent=a.batasSekolah>0?rp(a.batasSekolah)+' / hari':'Tidak dibatasi';$('#bm').textContent=a.batasJajan>0?rp(a.batasJajan)+' / hari':'Mengikuti sekolah';$('#bn').value=a.batasJajan;}
 $('#kids').onclick=e=>{const i=e.target.dataset.i;if(i!==undefined){S.cur=Number(i);render();}};
-$('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===e.target));['jajan','dep','bts','akun'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t));};
+$('#ktabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll('#ktabs button').forEach(b=>b.classList.toggle('on',b===e.target));['jajan','dep','bts','akun'].forEach(x=>$('#t-'+x).classList.toggle('hide',x!==t));};
 $('#bSave').onclick=e=>run(e.target,async()=>{const a=kid(),n=Number($('#bn').value);if(!(n>=0))throw new Error('Nominal tidak valid');
   await api('waliBatas',{idAnak:a.id,nominal:n});a.batasJajan=n;render();toast('Batas jajan tersimpan');});
 }

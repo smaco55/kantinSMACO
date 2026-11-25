@@ -7,7 +7,7 @@ const total=()=>Object.keys(S.cart).reduce((a,id)=>a+S.cart[id]*find(id).harga,0
 const focusScan=()=>{if($('#t-jual').classList.contains('hide'))return;$('#scan').focus({preventScroll:true});};
 document.addEventListener('click',e=>{if(!/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)&&!e.target.closest('dialog'))setTimeout(focusScan,50);});
 
-async function boot(){const d=await api('init');S.cat=d.katalog;S.cfg=d.cfg;applyTheme(d.cfg);$('#hdrName').textContent='Kasir · '+(d.cfg.nama_kantin||'');renderGrid();focusScan();}
+async function boot(){const d=await api('init');S.cat=d.katalog;S.cfg=d.cfg;applyTheme(d.cfg);renderGrid();focusScan();}
 boot().catch(e=>toast(e.message,1));
 const tick=()=>{$('#clk').textContent=new Date().toLocaleString('id-ID',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});};tick();setInterval(tick,20000);
 document.addEventListener('keydown',e=>{if(e.key==='F2'){e.preventDefault();focusScan();}
@@ -41,7 +41,7 @@ $('#cart').onclick=e=>{const b=e.target.closest('button');const i=b&&b.dataset.i
 renderCart();
 
 // pelanggan (terkunci pada hasil scan)
-function setCust(c,metode){clearTimeout(S.t);S.rid=null;S.cust=c;S.metode=metode;$('#pinK').value='';
+function setCust(c,metode){clearTimeout(S.t);$('#hasil').classList.add('hide');S.rid=null;S.cust=c;S.metode=metode;$('#pinK').value='';
   $('#cust').classList.remove('hide');
   $('#cust').innerHTML=`<img id="cf" alt="" class="hide" style="float:right;width:88px;height:88px;object-fit:cover;border-radius:2px"><div class="mu">${metode==='manual'?'<span class="tag">INPUT MANUAL</span> ':''}Pastikan nama sesuai orangnya</div><div class="big">${esc(c.nama)}</div><div>Kelas: <b>${esc(c.kelas||'-')}</b></div><div>Sisa saldo: <span class="big">${rp(c.saldo)}</span></div><div class="warn hide">Saldo tidak cukup untuk total ini.</div>`;
   if(c.foto)api('fotoGet',{tipe:'siswa',id:c.id}).then(r=>{if(r.data&&S.cust&&S.cust.id===c.id){$('#cf').src=r.data;$('#cf').classList.remove('hide');}}).catch(()=>{});
@@ -77,13 +77,13 @@ $('#pinK').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\
 $('#pinK').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(!$('#bOk').disabled)$('#bOk').click();else if(!S.cart||!Object.keys(S.cart).length)toast('Pilih barang dulu',1);}});
 $('#bLast').onclick=e=>run(e.target,async()=>{const r=await api('cancel',{id:S.last,alasan:alasanBatal()});toast('Transaksi dibatalkan, saldo dikembalikan');$('#bLast').classList.add('hide');boot();});
 
-function showStruk(r){const c=S.cfg;
-  $('#struk').innerHTML=`<div style="text-align:center"><b>${esc(c.nama_sekolah)}</b><br>${esc(c.nama_kantin)}<br>${esc(c.alamat||'')}</div><hr>${esc(r.waktu)}<br>No: ${esc(r.id)}<br>${esc(r.nama)} (${esc(r.kelas||'-')})<hr>`+
-   r.items.map(i=>`${esc(i.nama)}<div class="r"><span>${i.qty} × ${i.harga.toLocaleString('id-ID')}</span><span>${i.sub.toLocaleString('id-ID')}</span></div>`).join('')+
-   `<hr><div class="r"><b>TOTAL</b><b>${r.total.toLocaleString('id-ID')}</b></div><div class="r"><span>Saldo awal</span><span>${r.saldoSebelum.toLocaleString('id-ID')}</span></div><div class="r"><span>Sisa saldo</span><span>${r.saldoSesudah.toLocaleString('id-ID')}</span></div><hr><div style="text-align:center">${esc(c.teks_struk||'')}</div>`;
-  $('#bCetak').classList.toggle('hide',c.cetak_struk!=='Ya');$('#dStruk').showModal();}
-$('#bCetak').onclick=()=>window.print();
-$('#bTutupS').onclick=()=>{$('#dStruk').close();focusScan();};
+function showStruk(r){const c=S.cfg,m=modeStruk(c,'beli'),n=x=>Number(x).toLocaleString('id-ID');
+  S.ls={id:r.id,html:strukHtml(c,'STRUK PEMBELIAN',[r.waktu,'No: '+r.id,r.nama+' ('+(r.kelas||'-')+')'],r.items.map(i=>[i.nama,i.qty+' x '+n(i.harga),n(i.sub)]),[['TOTAL',n(r.total),1],['Saldo awal',n(r.saldoSebelum)],['Sisa saldo',n(r.saldoSesudah)]],c.teks_struk)};
+  $('#hasil').innerHTML=`<b>✔ Transaksi berhasil</b> · ${esc(r.nama)}<div>Total <b>${rp(r.total)}</b> · Sisa saldo <b>${rp(r.saldoSesudah)}</b></div>`+(m.ada?`<div class="toolbar" style="margin:8px 0 0">${m.cetak?'<button class="btn sm" id="hCetak">Cetak struk</button>':''}${m.email?`<button class="btn sm alt" id="hEmail" ${r.email?'':'disabled title="Pelanggan belum memiliki email"'}>Kirim ke email</button>`:''}</div>`:'');
+  $('#hasil').classList.remove('hide');
+  if(m.otomatis&&r.email)api('kirimStruk',{jenis:'beli',id:r.id}).then(()=>toast('Struk dikirim ke email pelanggan')).catch(e=>toast('Email gagal: '+e.message,1));}
+$('#hasil').onclick=e=>{if(e.target.id==='hCetak'&&S.ls)printHtml(S.ls.html,{kertas:'struk',judul:'Struk'});
+  if(e.target.id==='hEmail'&&S.ls)run(e.target,async()=>{await api('kirimStruk',{jenis:'beli',id:S.ls.id});toast('Struk dikirim ke email pelanggan');});};
 
 // antrean pre-order
 const NEXT={Baru:['Diproses','Proses'],Diproses:['Siap','Siap'],Siap:['Selesai','Serahkan']};

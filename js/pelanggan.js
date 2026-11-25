@@ -1,5 +1,4 @@
-const ROLE=sessionStorage.getItem('role');
-if((ROLE==='siswa'||ROLE==='guru')&&guard(ROLE)){
+if(guard('pelanggan')){
 const S={cat:[],cfg:{},libur:[],saldo:0,cart:{},date:'',kat:'Semua',tab:'pesan',h:{page:0,rows:[]}};
 const find=id=>S.cat.find(x=>x.id===id),today=()=>new Date().toLocaleDateString('sv-SE'),hm=()=>new Date().toTimeString().slice(0,5);
 const total=()=>Object.keys(S.cart).reduce((a,id)=>a+S.cart[id]*find(id).harga,0),count=()=>Object.values(S.cart).reduce((a,b)=>a+b,0);
@@ -7,7 +6,7 @@ const pinWarn=()=>{$('#pinW').innerHTML=S.pinDefault?'<div class="warn"><b>PIN k
 const setSaldo=n=>{S.saldo=n;$('#saldoH').textContent=rp(n);$('#saldoB').textContent=rp(n);
   $('#saldoW').innerHTML=n<Number(S.cfg.saldo_menipis||0)?'<div class="warn">Saldo menipis. Segera isi saldo ke bendahara.</div>':'';};
 
-async function boot(){const d=await api('init');S.cat=d.katalog;S.cfg=d.cfg;S.libur=d.libur;applyTheme(d.cfg);$('#hdrName').textContent=d.cfg.nama_kantin||'Kantin';setSaldo(d.profil.saldo);S.pinDefault=d.profil.pinDefault;pinWarn();
+async function boot(){const d=await api('init');S.cat=d.katalog;S.cfg=d.cfg;S.libur=d.libur;applyTheme(d.cfg);setSaldo(d.profil.saldo);S.pinDefault=d.profil.pinDefault;pinWarn();
   const ds=dates();const ok=ds.find(x=>!x.note);S.date=ok?ok.s:'';
   $('#info').innerHTML=d.cfg.preorder_aktif!=='Ya'?'<div class="warn">Pre-order sedang dimatikan. Silakan beli langsung di kasir.</div>':`<div class="mu">${Number(d.cfg.preorder_h_minus)>0?'Pemesanan ditutup <b>'+(Number(d.cfg.preorder_h_minus)===1?'sehari sebelum':d.cfg.preorder_h_minus+' hari sebelum')+'</b> tanggal ambil, pukul '+esc(d.cfg.jam_batas_preorder)+'.':'Pemesanan untuk hari ini ditutup pukul '+esc(d.cfg.jam_batas_preorder)+'. Pesan sehari sebelumnya juga bisa.'}</div>`;
   renderDates();renderCats();renderGrid();}
@@ -53,12 +52,14 @@ function renderCart(){const ids=Object.keys(S.cart);
   $('#cl').innerHTML=ids.map(id=>{const b=find(id),q=S.cart[id];return `<div class="row"><span>${esc(b.nama)}<br><small class="mu">${rp(b.harga)} × ${q} = ${rp(b.harga*q)}</small></span><span class="qn"><button data-a="-1" data-i="${esc(id)}">−</button><b>${q}</b><button data-a="1" data-i="${esc(id)}">+</button><button data-a="-999" data-i="${esc(id)}">✕</button></span></div>`;}).join('')||'<p class="mu">Keranjang kosong</p>';
   const t=total(),kurang=t>S.saldo;$('#ct').textContent=rp(t);$('#cs').innerHTML=`Ambil: <b>${esc(S.date)}</b> · Saldo: ${rp(S.saldo)}${kurang?'<div class="warn">Saldo tidak cukup. Kurangi pesanan atau isi saldo.</div>':''}`;
   $('#bOk').disabled=!ids.length||kurang;if(!ids.length&&$('#dC').open)$('#dC').close();}
-$('#bCart').onclick=()=>{renderCart();$('#dC').showModal();};$('#bBack').onclick=()=>$('#dC').close();
+$('#bCart').onclick=()=>{renderCart();$('#pinO').value='';$('#pinO').closest('dialog').querySelector('#pinO').style.display=S.cfg.pin_pesan_wajib==='Tidak'?'none':'';$('#dC').showModal();};
+$('#pinO').addEventListener('input',e=>e.target.value=e.target.value.replace(/\D/g,'').slice(0,6));$('#bBack').onclick=()=>$('#dC').close();
 $('#cl').onclick=e=>{const i=e.target.dataset.i;if(i)chg(i,Number(e.target.dataset.a));};
 $('#bOk').onclick=e=>run(e.target,async()=>{
   const items=Object.keys(S.cart).map(id=>({id,qty:S.cart[id]}));
   S.rid=S.rid||rid();
-  const r=await api('order',{items,tanggalAmbil:S.date,rid:S.rid});S.rid=null;
+  if(S.cfg.pin_pesan_wajib!=='Tidak'&&!/^\d{6}$/.test($('#pinO').value))throw new Error('Masukkan PIN transaksi 6 angka');
+  let r;try{r=await api('order',{items,tanggalAmbil:S.date,pin:$('#pinO').value,rid:S.rid});}catch(er){if(/PIN/.test(er.message))$('#pinO').value='';throw er;}S.rid=null;
   r.items.forEach(i=>{const b=S.cat.find(x=>x.nama===i.nama);if(b&&b.jenis!=='Pesan'){b.stok-=i.qty;if(b.stok<=0)b.tersedia=false;}});
   setSaldo(r.saldoSesudah);S.cart={};$('#dC').close();renderGrid();updBar();
   $('#dDb').innerHTML=`<div class="mu">Pesanan diterima</div><div class="ant">#${esc(r.antrean)}</div><div>Nomor antrean · ambil <b>${esc(r.tanggalAmbil)}</b></div><div class="warn" style="text-align:left">Tunjukkan nomor ini ke kasir saat mengambil. Pesanan yang tidak diambil tidak mendapat pengembalian saldo.</div>`+

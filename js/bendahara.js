@@ -3,7 +3,7 @@ const S={cfg:{},dep:null,kor:null,owed:[],csv:''};
 const D=()=>new Date().toLocaleDateString('sv-SE');
 const ago=n=>{const d=new Date();d.setDate(d.getDate()-n);return d.toLocaleDateString('sv-SE');};
 const fn=n=>Number(n).toLocaleString('id-ID');
-api('init').then(d=>{S.cfg=d.cfg;applyTheme(d.cfg);$('#hdrName').textContent='Bendahara · '+(d.cfg.nama_kantin||'');}).catch(e=>toast(e.message,1));
+api('init').then(d=>{S.cfg=d.cfg;applyTheme(d.cfg);}).catch(e=>toast(e.message,1));
 $('#pd').value=D().slice(0,8)+'01';$('#ps').value=D();$('#rt').value=D();$('#ld').value=D();$('#ls').value=D();
 
 $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===e.target));
@@ -24,19 +24,23 @@ const info=c=>`<div class="big">${esc(c.nama)}</div><div>Kelas: <b>${esc(c.kelas
 picker($('#pk-dep'),c=>{S.dep=c;S.depRid=null;$('#depInfo').innerHTML=info(c);$('#dep').classList.remove('hide');$('#depN').value='';$('#depN').focus();});
 $('#chips').innerHTML=[5000,10000,20000,50000].map(n=>`<button class="btn alt sm" data-n="${n}">${rp(n)}</button>`).join('');
 $('#chips').onclick=e=>{if(e.target.dataset.n)$('#depN').value=e.target.dataset.n;};
-let _pg=null;
-function cetak(html,wide,csv){$('#struk').innerHTML=html;$('#struk').className=wide?'wide':'';$('#dStruk').className=wide?'w':'';
-  $('#pg').textContent=wide?'@page{size:A4;margin:12mm}':'@page{size:58mm auto;margin:2mm}';
-  $('#bCsv').style.display=csv?'block':'none';S.csv=csv||'';$('#dStruk').showModal();}
-$('#bCetak').onclick=()=>window.print();$('#bTutupS').onclick=()=>$('#dStruk').close();
-$('#bCsv').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([S.csv],{type:'text/csv'}));a.download='laporan-kantin.csv';a.click();};
+function cetak(html,wide,csv,o){o=o||{};
+  if(wide){previewCetak(html,{csv,nama:'laporan-kantin',judul:'Laporan',ttd:['Bendahara','Mengetahui, Kepala Kantin']});return;}
+  S.sh=html;S.so=o;const m=modeStruk(S.cfg,'deposit'),dep=o.jenis==='deposit';
+  $('#struk').innerHTML=html;$('#bCetak').classList.toggle('hide',dep&&!m.cetak);
+  $('#bEmail').classList.toggle('hide',!(dep&&m.email));$('#bEmail').disabled=!o.email;$('#bEmail').title=o.email?'':'Pelanggan belum memiliki email';
+  $('#dStruk').showModal();}
+$('#bCetak').onclick=()=>printHtml($('#struk').innerHTML,{kertas:'struk',judul:'Struk'});$('#bTutupS').onclick=()=>$('#dStruk').close();
+$('#bEmail').onclick=e=>run(e.target,async()=>{await api('kirimStruk',{jenis:'deposit',id:S.so.id});toast('Bukti dikirim ke email pelanggan');});
 const head=()=>`<div style="text-align:center"><b>${esc(S.cfg.nama_sekolah||'')}</b><br>${esc(S.cfg.nama_kantin||'')}</div><hr>`;
 $('#bDep').onclick=e=>run(e.target,async()=>{
   const n=Number($('#depN').value);if(!(n>0))throw new Error('Isi nominal deposit');
   if(n>=500000&&!confirm('Nominal besar: '+rp(n)+'. Lanjutkan?'))return;
   S.depRid=S.depRid||rid();
   const r=await api('deposit',{customerId:S.dep.id,nominal:n,rid:S.depRid});S.depRid=null;
-  cetak(head()+`<b>BUKTI DEPOSIT</b><br>${esc(r.waktu)}<br>No: ${esc(r.id)}<br>${esc(r.nama)} (${esc(r.kelas||'-')})<hr><div class="r"><span>Deposit</span><b>${fn(r.nominal)}</b></div><div class="r"><span>Saldo sekarang</span><b>${fn(r.saldo)}</b></div><hr><div style="text-align:center">Simpan bukti ini</div>`);
+  const m=modeStruk(S.cfg,'deposit'),f2=fn;
+  if(m.ada){cetak(strukHtml(S.cfg,'BUKTI DEPOSIT',[r.waktu,'No: '+r.id,r.nama+' ('+(r.kelas||'-')+')'],[],[['Deposit',f2(r.nominal),1],['Saldo sekarang',f2(r.saldo)]],'Simpan bukti ini'),false,'',{jenis:'deposit',id:r.id,email:r.email});}
+  if(m.otomatis&&r.email)api('kirimStruk',{jenis:'deposit',id:r.id}).then(()=>toast('Bukti dikirim ke email')).catch(e=>toast('Email gagal: '+e.message,1));
   $('#dep').classList.add('hide');S.dep=null;toast('Deposit tersimpan');});
 
 // ===== koreksi / refund =====

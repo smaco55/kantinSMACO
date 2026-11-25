@@ -6,7 +6,7 @@ const pName=id=>(S.p.find(x=>x.ID===id)||{}).Nama||'-';
 const opts=(arr,f)=>arr.map(f).join('');
 async function load(){
   const [b,p,l,d]=await Promise.all([api('barangAll'),api('pemasokAll'),api('lowStock'),api('init')]);
-  S.b=b;S.p=p;S.low=l;S.libur=d.libur;applyTheme(d.cfg);$('#hdrName').textContent='Pencatatan · '+(d.cfg.nama_kantin||'');
+  S.b=b;S.p=p;S.low=l;S.libur=d.libur;applyTheme(d.cfg);
   if(!S.av)S.av=new Set(S.b.filter(x=>x.DijualHariIni==='Ya').map(x=>x.ID));
   renderAll();loadOrders().catch(()=>{});}
 load().catch(e=>toast(e.message,1));
@@ -142,6 +142,11 @@ $('#skR').onclick=e=>{if(e.target.id==='skXl'&&S.skSheet)unduhXlsx(S.skNama,[S.s
 // ===== rekap pesanan untuk pemasok =====
 const addDs=(s,n)=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return d.toLocaleDateString('sv-SE');};
 $('#rkT').value=addDs(D(),1);
+// buka tab Rekap pesanan: langsung tampilkan data dan daftar tanggal yang sudah punya pesanan
+$('#tabs').addEventListener('click',e=>{if(e.target.dataset.t==='rekap'){loadTgl();$('#bRk').click();}});
+async function loadTgl(){try{const r=await api('rekapTanggal');
+  $('#rkD').innerHTML=r.length?r.map(x=>`<button data-tg="${esc(x.tanggal)}" class="${x.tanggal===$('#rkT').value?'on':''}">${esc(new Date(x.tanggal+'T00:00:00').toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'}))} · ${x.porsi} porsi</button>`).join(''):'<span class="mu">Belum ada pre-order untuk tanggal mendatang.</span>';}catch(e){}}
+$('#rkD').onclick=e=>{const t=e.target.dataset.tg;if(t){$('#rkT').value=t;$('#bRk').click();loadTgl();}};
 const rkText=(r,p)=>`Pesanan untuk tanggal ${r.tanggal}\nKepada: ${p.pemasok}\n`+p.items.filter(i=>i.kirim>0).map(i=>`- ${i.nama}: ${i.kirim} ${i.satuan||''}`).join('\n')+`\n${r.ditutup?'Jumlah sudah final.':'Jumlah bisa bertambah sampai '+r.batas+'; kami kabari bila ada perubahan.'}\nMohon konfirmasi. Terima kasih.`;
 $('#bRk').onclick=e=>run(e.target,async()=>{
   const r=await api('rekapPesanan',{tanggal:$('#rkT').value});S.rk=r;
@@ -149,7 +154,7 @@ $('#bRk').onclick=e=>run(e.target,async()=>{
   $('#rkR').innerHTML=st+`<div class="mu" style="margin:6px 0">${r.jumlahPesanan} pesanan murid untuk tanggal ${esc(r.tanggal)}</div>`+
    (r.pemasok.length?r.pemasok.map((p,i)=>`<div class="card" style="margin-bottom:8px"><b>${esc(p.pemasok)}</b> <span class="tag">${p.total} porsi</span>
     <div class="wrap"><table><tr><th>Barang</th><th class="n">Dipesan</th><th class="n">Perlu dikirim</th></tr>${p.items.map(x=>`<tr><td>${esc(x.nama)}${x.jenis==='Pesan'?' <small class="mu">(sesuai pesanan)</small>':` <small class="mu">(stok ${x.stok})</small>`}</td><td class="n">${x.jumlah}</td><td class="n"><b>${x.kirim}</b></td></tr>`).join('')}</table></div>
-    <div class="row" style="border:0;gap:6px;justify-content:flex-start;margin-top:6px"><button class="btn sm" data-rw="${i}">Kirim WhatsApp</button><button class="btn sm alt" data-rc="${i}">Salin teks</button></div></div>`).join('')+'<button class="btn alt sm" id="rkXl">Unduh Excel</button>':'<p class="mu">Belum ada pre-order untuk tanggal ini.</p>');});
+    <div class="row" style="border:0;gap:6px;justify-content:flex-start;margin-top:6px"><button class="btn sm" data-rw="${i}">Kirim WhatsApp</button><button class="btn sm alt" data-rc="${i}">Salin teks</button></div></div>`).join('')+'<button class="btn alt sm" id="rkXl">Unduh Excel</button>':'<div class="warn">Belum ada pre-order untuk tanggal ini. Rekap hanya memuat pesanan murid (lewat aplikasi) dengan tanggal ambil ini, dan tidak menghitung pesanan yang dibatalkan.</div>');});
 $('#rkR').onclick=e=>{const d=e.target.dataset,r=S.rk;if(!r)return;
   if(d.rw!==undefined){const p=r.pemasok[d.rw],n=waNum(p.wa);if(!n)return toast('Nomor WhatsApp pemasok belum diisi',1);window.open('https://wa.me/'+n+'?text='+encodeURIComponent(rkText(r,p)),'_blank');}
   if(d.rc!==undefined)navigator.clipboard.writeText(rkText(r,r.pemasok[d.rc])).then(()=>toast('Teks rekap disalin'));
