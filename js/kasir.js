@@ -78,13 +78,22 @@ $('#pinK').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\
 $('#pinK').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(!$('#bOk').disabled)$('#bOk').click();else if(!S.cart||!Object.keys(S.cart).length)toast('Pilih barang dulu',1);}});
 $('#bLast').onclick=e=>run(e.target,async()=>{const r=await api('cancel',{id:S.last,alasan:alasanBatal()});toast('Transaksi dibatalkan, saldo dikembalikan');$('#bLast').classList.add('hide');boot();});
 
-function showStruk(r){const c=S.cfg,m=modeStruk(c,'beli'),n=x=>Number(x).toLocaleString('id-ID');
-  S.ls={id:r.id,html:strukHtml(c,'STRUK PEMBELIAN',[r.waktu,'No: '+r.id,r.nama+' ('+(r.kelas||'-')+')'],r.items.map(i=>[i.nama,i.qty+' x '+n(i.harga),n(i.sub)]),[['TOTAL',n(r.total),1],['Saldo awal',n(r.saldoSebelum)],['Sisa saldo',n(r.saldoSesudah)]],c.teks_struk)};
-  $('#hasil').innerHTML=`<b>✔ Transaksi berhasil</b> · ${esc(r.nama)}<div>Total <b>${rp(r.total)}</b> · Sisa saldo <b>${rp(r.saldoSesudah)}</b></div>`+(m.ada?`<div class="toolbar" style="margin:8px 0 0">${m.cetak?'<button class="btn sm" id="hCetak">Cetak struk</button>':''}${m.email?`<button class="btn sm alt" id="hEmail" ${r.email?'':'disabled title="Pelanggan belum memiliki email"'}>Kirim ke email</button>`:''}</div>`:'');
-  $('#hasil').classList.remove('hide');
-  if(m.otomatis&&r.email)api('kirimStruk',{jenis:'beli',id:r.id}).then(()=>toast('Struk dikirim ke email pelanggan')).catch(e=>toast('Email gagal: '+e.message,1));}
-$('#hasil').onclick=e=>{if(e.target.id==='hCetak'&&S.ls)printHtml(S.ls.html,{kertas:'struk',judul:'Struk'});
-  if(e.target.id==='hEmail'&&S.ls)run(e.target,async()=>{await api('kirimStruk',{jenis:'beli',id:S.ls.id});toast('Struk dikirim ke email pelanggan');});};
+function showStruk(r){
+  try{const c=S.cfg,m=modeStruk(c,'beli'),n=x=>Number(x).toLocaleString('id-ID');
+    S.ls={id:r.id,html:strukHtml(c,'STRUK PEMBELIAN',[r.waktu,'No: '+r.id,r.nama+' ('+(r.kelas||'-')+')'],(r.items||[]).map(i=>[i.nama,i.qty+' x '+n(i.harga),n(i.sub)]),[['TOTAL',n(r.total),1],['Saldo awal',n(r.saldoSebelum)],['Sisa saldo',n(r.saldoSesudah)]],c.teks_struk)};
+    if(m.otomatis&&r.email)api('kirimStruk',{jenis:'beli',id:r.id}).then(()=>toast('Struk dikirim ke email pelanggan')).catch(e=>toast('Email gagal: '+e.message,1));
+    if(!m.ada){toast('Transaksi berhasil · sisa saldo '+rp(r.saldoSesudah));return;}
+    let d=$('#dStrukK');
+    if(!d){d=document.createElement('dialog');d.id='dStrukK';d.innerHTML='<div id="strukK"></div><div id="strukB" class="chips" style="margin-top:12px"></div>';document.body.appendChild(d);
+      d.addEventListener('close',()=>focusScan());
+      d.addEventListener('click',e=>{const t=e.target;
+        if(t.id==='kCetak'){printHtml(S.ls.html,{kertas:'struk',judul:'Struk'});d.close();}
+        if(t.id==='kEmail')run(t,async()=>{await api('kirimStruk',{jenis:'beli',id:S.ls.id});toast('Struk dikirim ke email pelanggan');});
+        if(t.id==='kTutup')d.close();});}
+    $('#strukK').innerHTML=`<div class="hasil" style="margin-bottom:10px"><b>✔ Transaksi berhasil</b><br>${esc(r.nama)} · Total <b>${rp(r.total)}</b> · Sisa saldo <b>${rp(r.saldoSesudah)}</b></div><div id="struk">${S.ls.html}</div>`;
+    $('#strukB').innerHTML=(m.cetak?'<button class="btn sm" id="kCetak">Cetak struk</button>':'')+(m.email?`<button class="btn sm alt" id="kEmail" ${r.email?'':'disabled title="Pelanggan belum memiliki email"'}>Kirim ke email</button>`:'')+'<button class="btn sm alt" id="kTutup">Tutup</button>';
+    d.showModal();const f=$('#kCetak')||$('#kEmail')||$('#kTutup');if(f)f.focus();
+  }catch(e){toast('Transaksi berhasil, tetapi struk gagal ditampilkan: '+e.message,1);}}
 
 // antrean pre-order
 const NEXT={Baru:['Diproses','Proses'],Diproses:['Siap','Siap'],Siap:['Selesai','Serahkan']};

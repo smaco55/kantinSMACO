@@ -1,4 +1,4 @@
-const VERSI='20261125a';
+const VERSI='20261126a';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const rp=n=>'Rp'+Number(n).toLocaleString('id-ID');

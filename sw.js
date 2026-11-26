@@ -1,5 +1,5 @@
 // Service worker sederhana: hanya aset statis. Transaksi dan data TIDAK pernah disimpan atau dilayani offline.
-const V = 'kantin-v3';
+const V = 'kantin-v4';
 const ASET = ['./', 'index.html', 'css/app.css', 'js/core.js', 'config.js', 'manifest.json', 'icons/icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(ASET)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', e => {
