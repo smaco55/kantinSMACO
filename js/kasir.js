@@ -52,8 +52,9 @@ function resetAll(){S.cart={};clearCust();renderCart();$('#manual').classList.ad
 $('#bBatal').onclick=resetAll;
 
 $('#scan').addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();const v=e.target.value.trim();e.target.value='';if(!v)return;
+  $('#hasil').innerHTML='<span class="mu">Mencari “'+esc(v)+'”…</span>';$('#hasil').classList.remove('hide');
   run(null,async()=>{ // scan kartu lain otomatis menggantikan (membatalkan) pelanggan sebelumnya
-    const c=await api('lookup',{kode:v});setCust(c,'scan');});});
+    try{const c=await api('lookup',{kode:v});setCust(c,'scan');}catch(er){$('#hasil').classList.add('hide');throw er;}});});
 
 // manual / lupa kartu / darurat
 $('#bManual').onclick=()=>{$('#manual').classList.toggle('hide');$('#cariM').focus();};

@@ -13,7 +13,7 @@ $('#tabs').onclick=e=>{const t=e.target.dataset.t;if(!t)return;document.querySel
 function picker(box,cb){
   box.innerHTML='<input type="text" class="ps" placeholder="Scan kartu di sini…" autocomplete="off" inputmode="none"><input type="search" class="pq" placeholder="atau cari nama / nomor induk" style="margin-top:6px"><div class="ph"></div>';
   const ps=box.querySelector('.ps'),pq=box.querySelector('.pq'),ph=box.querySelector('.ph');let tm;
-  ps.addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();const v=ps.value.trim();ps.value='';if(v)run(null,async()=>cb(await api('lookup',{kode:v})));});
+  ps.addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();const v=ps.value.trim();ps.value='';if(v){toast('Mencari…');run(null,async()=>cb(await api('lookup',{kode:v})));}});
   pq.oninput=()=>{clearTimeout(tm);tm=setTimeout(()=>run(null,async()=>{const r=await api('search',{q:pq.value});
     ph.innerHTML=r.map(u=>`<div class="row"><span>${esc(u.nama)} <small class="mu">${esc(u.kelas)} · ${esc(u.nomorInduk)}</small></span><button class="btn sm" data-u="${esc(u.id)}">Pilih</button></div>`).join('');}),350);};
   ph.onclick=e=>{const id=e.target.dataset.u;if(id)run(e.target,async()=>{ph.innerHTML='';pq.value='';cb(await api('lookup',{customerId:id}));});};

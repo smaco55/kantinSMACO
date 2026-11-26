@@ -8,7 +8,7 @@
  <div class="card" style="padding:14px 16px">
   <div class="row" style="border:0;flex-wrap:wrap;padding:0 0 10px">
    <div class="seg" id="gseg"></div>
-   <div class="chips"><button class="btn sm" id="bAdd">+ Tambah akun</button><button class="btn sm alt" id="bImp">Impor dari Excel</button><button class="btn sm alt" id="bNaik">Kenaikan kelas</button></div>
+   <div class="chips"><button class="btn sm" id="bAdd">+ Tambah akun</button><button class="btn sm alt" id="bImp">Impor dari Excel</button><button class="btn sm alt" id="bKirim">Kirim akun ke email</button><button class="btn sm alt" id="bNaik">Kenaikan kelas</button></div>
   </div>
   <div class="fgrid" style="grid-template-columns:2fr 1fr 1fr 1fr;gap:10px">
    <input type="search" id="uq" placeholder="Cari nama, username, email, atau NIS">
@@ -55,6 +55,8 @@
  <div id="iP" class="mu" style="margin-top:10px"></div><div id="iV" class="wrap"></div>
  <div class="chips" style="margin-top:12px"><button class="btn sm" id="iS" disabled>Mulai impor</button><button class="btn sm alt hide" id="iDl">Unduh daftar akun &amp; password (Excel)</button><button class="btn sm alt" id="iX">Tutup</button></div>
  <div id="iR" class="wrap" style="margin-top:10px"></div></dialog>
+
+<dialog id="dK" class="w"><div id="kB"></div></dialog>
 
 <dialog id="dN"><h3>Kenaikan kelas</h3><label>Pemetaan kelas (satu per baris, contoh: X=XI)</label><textarea id="nm" rows="4"></textarea><label>Kelas yang lulus (pisahkan koma)</label><input type="text" id="nl" placeholder="XII">
  <p class="mu">Siswa lulus dinonaktifkan. Saldo tersisa dikembalikan lewat Bendahara.</p><button class="btn" id="nS">Jalankan</button><button class="btn alt" id="nX" style="margin-top:8px">Batal</button></dialog>

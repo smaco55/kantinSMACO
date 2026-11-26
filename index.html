@@ -27,7 +27,7 @@ try{pasangIdentitas(JSON.parse(localStorage.getItem('theme')));}catch(e){}
 // identitas terbaru dari server (tanpa login)
 fetch(API_URL+'?full=1').then(r=>r.json()).then(j=>{if(j&&(j.nama||j.nama_kantin)){const c=Object.assign(cfgNow(),{nama_kantin:j.nama_kantin||j.nama,nama_sekolah:j.nama_sekolah,alamat:j.alamat,telepon:j.telepon,warna_utama:j.warna_utama,logo:j.logo});pasangIdentitas(c);}}).catch(()=>{});
 $i('hak').value=localStorage.getItem('hak')||'kepala';
-let lama='',grup='';
+let lama='',grup='',minp=4;
 const go=()=>{location.href=homeUrl();};
 function toggle(btn,ids){btn.onclick=()=>{const t=$i(ids[0]).type==='password';ids.forEach(i=>$i(i).type=t?'text':'password');btn.textContent=t?'Sembunyikan':'Tampilkan';};}
 toggle($i('tg1'),['pw']);toggle($i('tg2'),['p1','p2']);
@@ -39,11 +39,11 @@ $i('bLogin').onclick=e=>run(e.target,async()=>{
   const r=await api('login',{username:$i('uid').value.trim(),password:$i('pw').value,hak:$i('hak').value});
   localStorage.setItem('hak',$i('hak').value);
   sessionStorage.setItem('tok',r.token);sessionStorage.setItem('role',r.role);sessionStorage.setItem('grup',r.grup);sessionStorage.setItem('hak',r.hak);sessionStorage.setItem('nama',r.nama);sessionStorage.setItem('izin',JSON.stringify(r.izin||[]));
-  if(r.gantiPassword||r.gantiPin){lama=$i('pw').value;grup=r.grup;$i('fLogin').classList.add('hide');$i('fAkt').classList.remove('hide');
+  if(r.gantiPassword||r.gantiPin){lama=$i('pw').value;grup=r.grup;minp=r.minPass||4;$i('p1').placeholder='Minimal '+minp+' karakter';$i('fLogin').classList.add('hide');$i('fAkt').classList.remove('hide');
     if(r.gantiPin){$i('pinBox').classList.remove('hide');$i('aktInfo').textContent='Ini login pertama Anda. Buat password baru dan PIN transaksi pribadi.';}$i('p1').focus();}
   else go();});
 $i('bAkt').onclick=e=>run(e.target,async()=>{const n=$i('p1').value,pin=$i('n1').value;
-  if(n.length<4)throw new Error('Password minimal 4 karakter');if(n!==$i('p2').value)throw new Error('Ulangi password tidak sama');
+  if(n.length<minp)throw new Error('Password minimal '+minp+' karakter');if(n!==$i('p2').value)throw new Error('Ulangi password tidak sama');
   if(grup==='pelanggan'){if(!/^\d{6}$/.test(pin))throw new Error('PIN harus 6 angka');if(pin!==$i('n2').value)throw new Error('Ulangi PIN tidak sama');}
   await api('aktivasi',{lama,baru:n,pinBaru:pin});toast('Akun berhasil diaktifkan');setTimeout(go,600);});
 </script></body></html>

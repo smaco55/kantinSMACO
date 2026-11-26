@@ -29,7 +29,7 @@ $('#kor').onclick=e=>{const d=e.target.dataset;if(d.k)run(e.target,async()=>{awa
 const filt=()=>({grup:S.u.grup,q:$('#uq').value,kelas:$('#uk').value,status:$('#us').value,aktivasi:$('#ua').value});
 async function users(){
   const r=await api('userList',Object.assign(filt(),{page:S.u.page,size:25}));
-  S.u.total=r.total;S.users=r.rows;S.hit=r.hitung||{};S.kelas=r.kelas||[];
+  S.u.total=r.total;S.users=r.rows;S.hit=r.hitung||{};S.kelas=r.kelas||[];S.angk=r.angkatan||[];
   const cur=$('#uk').value;$('#uk').innerHTML='<option value="">Semua kelas</option>'+S.kelas.map(k=>`<option ${k===cur?'selected':''}>${esc(k)}</option>`).join('');
   $('#uk').classList.toggle('hide',S.u.grup!=='pelanggan');seg();renderUsers();}
 function seg(){$('#gseg').innerHTML=GR.map(g=>`<button data-g="${g[0]}" class="${S.u.grup===g[0]?'on':''}">${g[1]}<span class="ct">${S.hit[g[0]]||0}</span></button>`).join('');}
@@ -39,7 +39,7 @@ function renderUsers(){const pel=S.u.grup==='pelanggan';
   const rows=S.users.map(u=>`<tr><td><input type="checkbox" data-sel="${esc(u.id)}" ${S.sel.has(u.id)?'checked':''}></td>
    <td><b>${esc(u.nama)}</b><div class="mu" style="font-size:12.5px">${esc(u.username)}${u.nis?' · '+esc(u.nis):''}</div></td>
    <td>${pel?esc(u.kelas||'-')+`<div class="mu" style="font-size:12.5px">${u.peran==='guru'?'Guru':'Siswa'}</div>`:esc(GN[u.grup]||u.peran)}</td>
-   <td>${u.status==='Aktif'?'<span class="bdg ok">Aktif</span>':u.status==='Lulus'?'<span class="bdg mu">Lulus</span>':'<span class="bdg er">Nonaktif</span>'}${u.gagal>=5?' <span class="bdg er">Terkunci</span>':''}</td>
+   <td>${u.status==='Aktif'?'<span class="bdg ok">Aktif</span>':u.status==='Lulus'?'<span class="bdg mu">Lulus</span>':'<span class="bdg er">Nonaktif</span>'}${u.terkunci?' <span class="bdg er">Terkunci</span>':''}</td>
    <td>${u.aktivasi?`<span class="bdg ok" title="Password sudah diperbarui pemilik">✔ Aktivasi ${esc(u.aktivasi)}</span>`:'<span class="bdg wr">Belum aktivasi</span>'}</td>
    ${pel?`<td>${u.pinDiganti?'<span class="bdg ok">✔ PIN diganti</span>':'<span class="bdg mu">PIN bawaan</span>'}${u.pinGagal>=5?' <span class="bdg er">PIN terkunci</span>':''}</td><td class="n">${rp(u.saldo)}</td>`:''}
    <td class="n" style="white-space:nowrap"><button class="btn sm alt" data-u="${esc(u.id)}">Kelola</button> ${u.status==='Aktif'?`<button class="btn sm redo" data-off="${esc(u.id)}">Nonaktifkan</button>`:`<button class="btn sm alt" data-on="${esc(u.id)}">Aktifkan</button>`}</td></tr>`).join('');
@@ -71,7 +71,7 @@ function unduhKred(list,nama){const url=location.origin+location.pathname.replac
 async function openU(u){const d=await api('userDetail',{id:u.id});S.cur=u;const pel=u.grup==='pelanggan';
   $('#dUb').innerHTML=`<h3>${esc(u.nama)} ${u.status==='Aktif'?'<span class="bdg ok">Aktif</span>':'<span class="bdg er">'+esc(u.status)+'</span>'}</h3>
    <div class="mu">${esc(hakLabel(u.peran))} · Username: <b>${esc(u.username)}</b>${u.nis?' · NIS/NIP '+esc(u.nis):''}${pel?' · kelas '+esc(u.kelas||'-'):''}</div>
-   <div style="margin:8px 0">${u.aktivasi?`<span class="bdg ok">✔ Aktivasi ${esc(u.aktivasi)}</span>`:'<span class="bdg wr">Belum aktivasi</span>'} ${pel?(u.pinDiganti?'<span class="bdg ok">✔ PIN diganti</span>':'<span class="bdg mu">PIN bawaan 123456</span>'):''} ${u.gagal>=5?'<span class="bdg er">Akun terkunci</span>':''}</div>
+   <div style="margin:8px 0">${u.aktivasi?`<span class="bdg ok">✔ Aktivasi ${esc(u.aktivasi)}</span>`:'<span class="bdg wr">Belum aktivasi</span>'} ${pel?(u.pinDiganti?'<span class="bdg ok">✔ PIN diganti</span>':'<span class="bdg mu">PIN bawaan 123456</span>'):''} ${u.terkunci?'<span class="bdg er">Akun terkunci</span>':''}</div>
    ${pel?`<div>Saldo: <b>${rp(u.saldo)}</b></div>`:''}${d.wali.length?`<div>Wali: ${d.wali.map(esc).join(', ')}</div>`:''}${d.anak.length?`<div>Anak: ${d.anak.map(esc).join(', ')}</div>`:''}
    <h4>Data akun</h4><div class="fgrid"><div><label>Nama</label><input type="text" id="enm" value="${esc(u.nama)}"></div>${pel?`<div><label>Kelas</label><input type="text" id="ekl" list="dlKelas" value="${esc(u.kelas||'')}"><datalist id="dlKelas">${S.kelas.map(k=>`<option value="${esc(k)}">`).join('')}</datalist></div><div><label>NIS / NIP</label><input type="text" id="enis" value="${esc(u.nis||'')}"></div>`:''}<div><label>Email</label><input type="email" id="eem" value="${esc(u.email||'')}"></div></div>
    <button class="btn sm" data-a="ubah" style="margin-top:10px">Simpan data</button>
@@ -125,7 +125,7 @@ function wiz2(){const g=W.grup,pel=g==='pelanggan';
    ${(pel||g==='wali')?`<div class="full"><label>Email ${pel?'(dipakai sebagai username)':'(opsional, dipakai sebagai username)'}</label><input type="email" id="wE" autocomplete="off" placeholder="nama@email.com"></div>`:''}
    ${!pel?`<div class="full"><label>Username${g==='wali'?' (kosongkan = pakai email)':''}</label><input type="text" id="wU" autocapitalize="none" autocomplete="off"></div>`:''}
    ${pel?`<div class="full"><label>Kode kartu (opsional, scan atau ketik)</label><input type="text" id="wC" autocomplete="off"></div>`:''}
-   <div class="full"><label>Password awal</label><div class="seg" id="wP"><button type="button" data-p="auto" class="${W.pw==='auto'?'on':''}">Dibuat otomatis</button><button type="button" data-p="manual" class="${W.pw==='manual'?'on':''}">Tentukan sendiri</button></div><input type="text" id="wPw" class="${W.pw==='manual'?'':'hide'}" placeholder="Minimal 4 karakter" style="margin-top:6px" autocomplete="off"></div>
+   <div class="full"><label>Password awal</label><div class="seg" id="wP"><button type="button" data-p="auto" class="${W.pw==='auto'?'on':''}">Dibuat otomatis</button><button type="button" data-p="manual" class="${W.pw==='manual'?'on':''}">Tentukan sendiri</button></div><input type="text" id="wPw" class="${W.pw==='manual'?'':'hide'}" placeholder="Minimal '+(['pelanggan','wali'].includes(g)?4:8)+' karakter" style="margin-top:6px" autocomplete="off"></div>
    ${g==='wali'?`<div class="full"><label>Anak yang dipantau</label><input type="search" id="wA" placeholder="Cari nama anak lalu pilih"><div id="wAr"></div><div class="chips" id="wAc" style="margin-top:6px"></div></div>`:''}</div>
   <div class="chips" style="margin-top:16px"><button class="btn sm" id="w2s">Buat akun</button><button class="btn sm alt" id="w2b">Kembali</button></div>`;
   chipsAnak();
@@ -183,6 +183,57 @@ $('#iS').onclick=e=>run(e.target,async()=>{S.cred=[];const all=S.imp,bad=[];
   $('#iR').innerHTML=bad.length?'<h4>Perlu diperbaiki</h4>'+tbl([['Nama'],['Username / Email'],['Masalah']],bad.map(x=>[esc(x.nama||''),esc(x.username||''),esc(x.error||x.catatan||'')])):'';
   $('#iDl').classList.toggle('hide',!S.cred.length);if(S.cred.length)unduhKred(S.cred,'akun-baru');});
 $('#iDl').onclick=()=>unduhKred(S.cred,'akun-baru');
+
+
+// ----- kirim akun ke email secara massal (per kelas / per angkatan) -----
+const K={mode:'reset',scope:'kelas',val:'',belum:true,rows:[],file:'',ids:[],adaEmail:0,kuota:-1};
+const angk=k=>{const t=String(k||'').trim().toUpperCase().split(/[\s\-._\/]+/)[0]||'',m=t.match(/^(\d+)[A-Z]*$/);return m?m[1]:t;};
+$('#bKirim').onclick=()=>{Object.assign(K,{mode:'reset',scope:'kelas',val:'',belum:true,rows:[],file:'',ids:[]});renderK();$('#dK').showModal();};
+function kOpsi(){const kl=K.mode==='reset'?S.kelas:[...new Set(K.rows.map(r=>r.kelas).filter(Boolean))].sort(),an=K.mode==='reset'?S.angk:[...new Set(K.rows.map(r=>angk(r.kelas)).filter(Boolean))].sort();return {kl,an};}
+function renderK(){const o=kOpsi(),reset=K.mode==='reset',list=K.scope==='kelas'?o.kl:K.scope==='angkatan'?o.an:[];
+  if(K.scope!=='semua'&&!list.includes(K.val))K.val=list[0]||'';
+  $('#kB').innerHTML=`<h3>Kirim akun ke email</h3>
+   <div class="seg" id="kM"><button type="button" data-m="reset" class="${reset?'on':''}">Buat password baru &amp; kirim</button><button type="button" data-m="excel" class="${reset?'':'on'}">Kirim dari Excel yang sudah diunduh</button></div>
+   ${reset?'<div class="warn">Sistem membuat <b>password baru</b> untuk tiap pelanggan lalu mengirimkannya ke email mereka. Password pada Excel yang diunduh sebelumnya <b>tidak berlaku lagi</b> bagi akun yang diproses.</div>'
+    :`<div class="mu" style="margin:10px 0 4px">Gunakan berkas Excel daftar akun yang sebelumnya diunduh dari aplikasi. Password pada berkas tetap berlaku. Akun yang password-nya sudah diubah atau sudah aktivasi dilewati otomatis.</div><input type="file" id="kF" accept=".xlsx,.csv,text/csv">${K.rows.length?`<div class="mu" style="margin-top:6px"><b>${K.rows.length}</b> akun terbaca dari "${esc(K.file)}"</div>`:''}`}
+   ${(reset||K.rows.length)?`<label>Kirim untuk</label><div class="seg" id="kS"><button type="button" data-s="kelas" class="${K.scope==='kelas'?'on':''}">Per kelas</button><button type="button" data-s="angkatan" class="${K.scope==='angkatan'?'on':''}">Per angkatan</button><button type="button" data-s="semua" class="${K.scope==='semua'?'on':''}">Semua pelanggan</button></div>
+   ${K.scope!=='semua'?`<select id="kV" style="margin-top:8px">${list.map(v=>`<option value="${esc(v)}" ${v===K.val?'selected':''}>${K.scope==='angkatan'?'Angkatan ':'Kelas '}${esc(v)}</option>`).join('')||'<option value="">(belum ada data)</option>'}</select>`:''}
+   ${reset?`<label style="display:flex;gap:8px;align-items:center;font-weight:400;margin-top:10px"><input type="checkbox" id="kB2" ${K.belum?'checked':''}> Hanya akun yang belum aktivasi (disarankan)</label>`:''}
+   <div id="kPv" class="cust" style="margin-top:12px">Menghitung…</div>`:''}
+   <div id="kPr" class="mu"></div><div id="kRs" class="wrap"></div>
+   <div class="chips" style="margin-top:12px"><button class="btn sm" id="kGo" disabled>Kirim sekarang</button><button class="btn sm alt" id="kX">Tutup</button></div>`;
+  if(reset||K.rows.length)kPreview();}
+async function kPreview(){const pv=$('#kPv');
+  if(K.mode==='reset'){const r=await api('userList',{grup:'pelanggan',status:'Aktif',kelas:K.scope==='kelas'?K.val:'',angkatan:K.scope==='angkatan'?K.val:'',aktivasi:K.belum?'belum':'',idsOnly:1});
+    K.ids=r.ids;K.adaEmail=r.adaEmail;K.kuota=r.kuota;
+    pv.innerHTML=`<b>${r.ids.length}</b> akun akan diproses, <b>${r.adaEmail}</b> di antaranya memiliki email.${r.ids.length-r.adaEmail?` <span style="color:var(--er)">${r.ids.length-r.adaEmail} tanpa email akan dilewati.</span>`:''}<div class="mu">Sisa kuota email Google hari ini: ${r.kuota<0?'tidak diketahui':r.kuota}</div>${r.kuota>=0&&r.adaEmail>r.kuota?'<div class="warn">Kuota tidak cukup untuk semua. Kirim per kelas lebih kecil, atau lanjutkan besok.</div>':''}`;
+    $('#kGo').disabled=!r.adaEmail;}
+  else{const rows=kRows();pv.innerHTML=`<b>${rows.length}</b> akun dalam pilihan ini.`;$('#kGo').disabled=!rows.length;}}
+const kRows=()=>K.rows.filter(r=>K.scope==='semua'||(K.scope==='kelas'?r.kelas===K.val:angk(r.kelas)===K.val));
+async function kBaca(f){try{const sheets=await bacaBerkas(f);let out=[];
+  sheets.forEach(sh=>{const hi=sh.rows.findIndex(r=>r.some(c=>/username/i.test(c)));if(hi<0)return;const H=sh.rows[hi].map(normH),ix=n=>H.findIndex(h=>h.startsWith(n));
+    const u=ix('username'),p=ix('password'),k=ix('kelas'),n=ix('nama');
+    sh.rows.slice(hi+1).forEach(r=>{if(r[u]&&r[p])out.push({username:r[u],password:r[p],kelas:k>=0?r[k]:'',nama:n>=0?r[n]:''});});});
+  if(!out.length)throw new Error('Kolom Username dan Password tidak ditemukan. Gunakan berkas daftar akun yang diunduh dari aplikasi.');
+  K.rows=out;K.file=f.name;K.scope='kelas';renderK();}catch(e){toast(e.message,1);}}
+$('#kB').addEventListener('change',e=>{const t=e.target;
+  if(t.id==='kF'&&t.files[0])kBaca(t.files[0]);if(t.id==='kV'){K.val=t.value;kPreview();}if(t.id==='kB2'){K.belum=t.checked;kPreview();}});
+$('#kB').addEventListener('click',e=>{const t=e.target;
+  if(t.closest('#kM')&&t.dataset.m){K.mode=t.dataset.m;K.scope='kelas';K.val='';renderK();}
+  if(t.closest('#kS')&&t.dataset.s){K.scope=t.dataset.s;K.val='';renderK();}
+  if(t.id==='kX'){$('#dK').close();users();}
+  if(t.id==='kGo')run(t,kKirim);});
+async function kKirim(){const url=location.origin+location.pathname.replace(/[^/]*$/,'index.html'),reset=K.mode==='reset';
+  const items=reset?K.ids:kRows(),label=K.scope==='semua'?'semua pelanggan':(K.scope==='angkatan'?'angkatan ':'kelas ')+K.val;
+  if(!confirm('Kirim akun ke email untuk '+items.length+' akun ('+label+')?'+(reset?'\nPassword baru dibuat dan password lama tidak berlaku.':'\nBerkas Excel dipakai apa adanya.')))return;
+  const hasil=[];let kuota=-1;$('#kGo').disabled=true;
+  for(let i=0;i<items.length;i+=12){$('#kPr').textContent='Mengirim '+Math.min(i+12,items.length)+' / '+items.length+'… jangan tutup jendela ini';
+    try{const r=await api('kirimAkun',reset?{mode:'reset',ids:items.slice(i,i+12),url}:{mode:'excel',rows:items.slice(i,i+12).map(x=>({username:x.username,password:x.password})),url});r.hasil.forEach(x=>hasil.push(x));kuota=r.kuota;}
+    catch(e){toast(e.message,1);$('#kPr').innerHTML='<b style="color:var(--er)">Pengiriman dihentikan: '+esc(e.message)+'</b>';break;}}
+  const ok=hasil.filter(x=>x.status==='terkirim'),bad=hasil.filter(x=>x.status!=='terkirim');
+  if(hasil.length)$('#kPr').innerHTML=`<b>Selesai: ${ok.length} terkirim, ${bad.length} gagal/dilewati.</b>${kuota>=0?' Sisa kuota email hari ini: '+kuota+'.':''}`;
+  $('#kRs').innerHTML=bad.length?'<h4>Tidak terkirim</h4>'+tbl([['Nama'],['Kelas'],['Email'],['Alasan']],bad.map(x=>[esc(x.nama),esc(x.kelas||''),esc(x.email||''),esc(x.status)])):'';
+  if(reset)kPreview();}
 
 // kenaikan kelas
 $('#bNaik').onclick=()=>$('#dN').showModal();$('#nX').onclick=()=>$('#dN').close();

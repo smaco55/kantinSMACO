@@ -86,14 +86,15 @@ function chrome(page,iz){
   $('#pgTitle').textContent=lbl(target)||'Kantin';
   if(target){if(target.dataset.t===def)target.classList.add('on');else setTimeout(()=>target.click(),0);}
   $('#tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(b){$('#pgTitle').textContent=lbl(b);close();scrollTo(0,0);}});
-  const d=document.createElement('dialog');d.id='dPw';d.innerHTML='<h3>Ganti Password</h3><label>Password lama</label><input type="password" id="pwL" autocomplete="current-password"><label>Password baru (minimal 4 karakter)</label><input type="password" id="pwB" autocomplete="new-password"><label>Ulangi password baru</label><input type="password" id="pwU" autocomplete="new-password"><label style="display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" id="pwS"> Tampilkan password</label><button class="btn" id="pwOk" style="margin-top:14px">Simpan</button><button class="btn alt" id="pwX" style="margin-top:8px">Batal</button>';
+  const d=document.createElement('dialog');d.id='dPw';d.innerHTML='<h3>Ganti Password</h3><label>Password lama</label><input type="password" id="pwL" autocomplete="current-password"><label>Password baru (minimal '+minPw()+' karakter)</label><input type="password" id="pwB" autocomplete="new-password"><label>Ulangi password baru</label><input type="password" id="pwU" autocomplete="new-password"><label style="display:flex;gap:6px;align-items:center;font-weight:400"><input type="checkbox" id="pwS"> Tampilkan password</label><button class="btn" id="pwOk" style="margin-top:14px">Simpan</button><button class="btn alt" id="pwX" style="margin-top:8px">Batal</button>';
   document.body.appendChild(d);
   $('#pwS').onchange=e=>['pwL','pwB','pwU'].forEach(i=>$('#'+i).type=e.target.checked?'text':'password');
   $('#pwX').onclick=()=>d.close();
   $('#pwOk').onclick=e=>run(e.target,async()=>{const a=$('#pwL').value,n=$('#pwB').value;
-    if(n.length<4)throw new Error('Password baru minimal 4 karakter');if(n!==$('#pwU').value)throw new Error('Ulangi password baru tidak sama');
+    if(n.length<minPw())throw new Error('Password baru minimal '+minPw()+' karakter');if(n!==$('#pwU').value)throw new Error('Ulangi password baru tidak sama');
     await api('changePassword',{lama:a,baru:n});d.close();toast('Password berhasil diganti');});
   try{applyTheme(JSON.parse(localStorage.getItem('theme')));}catch(e){}}
+const minPw=()=>['kasir','bendahara','pencatat','kepala'].includes(sessionStorage.getItem('role'))?8:4;
 function openPw(){['pwL','pwB','pwU'].forEach(i=>$('#'+i).value='');$('#dPw').showModal();$('#pwL').focus();}
 
 /* ===== tema ===== */
